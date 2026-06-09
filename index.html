@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { 
-            --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #f59e0b; --accent: #6366f1;
+            --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #d97706; --accent: #6366f1;
             --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #cbd5e1;
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         }
@@ -42,24 +42,29 @@
 
         #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
         
-        .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; }
+        /* ضبط الجداول لتعمل بخاصية Autofit والاحتواء التلقائي الكامل والعريض */
+        .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; table-layout: auto !important; }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
         .pro-table th:hover, .monthly-table th:hover { opacity: 0.9; background-color: var(--accent); }
-        .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
+        .pro-table td, .monthly-table td { padding: 14px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
-        /* توسيع عمود الاسم ليصبح مريحاً للأسماء الثنائية والثلاثية */
+        /* ثبات وعرض عمود الاسم بشكل مريح */
         .pro-table th:nth-child(1), .pro-table td:nth-child(1),
         .monthly-table th:nth-child(1), .monthly-table td:nth-child(1) {
-            min-width: 160px !important;
-            width: 160px !important;
+            min-width: 150px !important;
         }
 
-        /* توسيع العمود الأخير الحامل للجملة الطويلة ليعرض بشكل أفقي احترافي وبدون زحام */
-        .pro-table th:last-child, .pro-table td:last-child,
+        /* تنسيق عمود المتبقي لتارجت اليوم باللون البرتقالي الجذاب في التقرير اليومي */
+        .orange-target-header {
+            background: var(--warning) !important;
+            color: #ffffff !important;
+        }
+
+        /* توسيع وتثبيت العمود الأخير في الأداء الشهري ليستوعب الجملة أفقياً وبمظهر فخم */
         .monthly-table th:last-child, .monthly-table td:last-child {
-            min-width: 180px !important;
-            width: 180px !important;
+            min-width: 190px !important;
+            width: 190px !important;
             white-space: nowrap !important;
         }
 
@@ -111,7 +116,6 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
-    <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -147,7 +151,7 @@
                             <th onclick="sortTable(2, 'summaryTable', true)">عدد الدقائق ⇅</th>
                             <th onclick="sortTable(3, 'summaryTable', true)">عدد المكالمات ⇅</th>
                             <th onclick="sortTable(4, 'summaryTable', true)">تارجت الدقائق ⇅</th>
-                            <th onclick="sortTable(5, 'summaryTable')" style="background: #d97706">المتبقي لتارجت اليوم ⇅</th>
+                            <th onclick="sortTable(5, 'summaryTable', true)" class="orange-target-header">المتبقي لتارجت اليوم ⇅</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -162,7 +166,6 @@
         </div>
     </div>
 
-    <!-- الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -176,7 +179,6 @@
 
             <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
-            <!-- الجزء الأول: الموظفون -->
             <div id="employeesCaptureArea" class="mb-4">
                 <h4 class="section-title-business">📊 سجل أداء موظفي الفريق</h4>
                 <div class="monthly-scroll">
@@ -187,7 +189,7 @@
                                 <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
                                 <th id="daysPlaceholder"></th>
                                 <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
-                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">المطلوب لتارجت الشهر ⇅</th>
+                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">المطلوب للتارجت الشهري ⇅</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -201,7 +203,6 @@
                 </div>
             </div>
 
-            <!-- الجزء الثاني: المشرفون -->
             <div id="supervisorsCaptureArea">
                 <h4 class="section-title-business">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
                 <table class="pro-table text-center shadow-sm" id="supervisorTable">
@@ -340,7 +341,6 @@
             
             const individualTarget = emp.target || 180;
             const remainingForToday = (individualTarget - info.mins) > 0 ? (individualTarget - info.mins) : '✅';
-            const reqMinsValue = (individualTarget - info.mins) > 0 ? `+${individualTarget - info.mins}` : "⭐ مكتمل";
 
             chartLabels.push(emp.name);
             chartData.push(info.mins);
@@ -351,8 +351,7 @@
                 <td class="${cls}">${info.mins}</td>
                 <td style="color:var(--accent)">${info.calls}</td>
                 <td>${individualTarget}</td>
-                <td>${remainingForToday}</td>
-                <td class="req-col">${reqMinsValue}</td>
+                <td class="req-col">${remainingForToday}</td>
             </tr>`;
         });
         
