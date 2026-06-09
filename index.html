@@ -45,20 +45,16 @@
         #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea, #dailyTableCaptureArea, #dailyChartCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
         
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; table-layout: auto !important; }
-        .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
+        .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 12px 8px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
         .pro-table th:hover, .monthly-table th:hover { opacity: 0.9; background-color: var(--accent); }
-        .pro-table td, .monthly-table td { padding: 14px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
+        .pro-table td, .monthly-table td { padding: 12px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
-        #summaryTable th, #summaryTable td {
-            padding: 8px 4px !important;
-            font-size: 0.95rem !important;
-        }
-
+        #summaryTable th, #summaryTable td { padding: 8px 4px !important; font-size: 0.92rem !important; }
         .monthly-table th, .monthly-table td { padding: 8px 4px !important; font-size: 0.85rem !important; }
 
         .pro-table th:nth-child(1), .pro-table td:nth-child(1),
-        .monthly-table th:nth-child(1), .monthly-table td:nth-child(1) { min-width: 140px !important; font-size: 0.9rem !important; }
+        .monthly-table th:nth-child(1), .monthly-table td:nth-child(1) { min-width: 130px !important; font-size: 0.9rem !important; }
 
         .orange-target-header { background: var(--warning) !important; color: #ffffff !important; }
 
@@ -75,7 +71,6 @@
         .chart-box-card {
             background: var(--card-bg); border: 2px solid var(--border); border-radius: 18px; padding: 24px; margin: 25px 0; box-shadow: var(--chart-box-shadow); transition: transform 0.2s, box-shadow 0.2s;
         }
-        .chart-box-card:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
         .chart-container { position: relative; height: 380px; width: 100%; }
 
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
@@ -85,17 +80,25 @@
         .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
-        .btn-img { background: #e67e22; } .btn-excel { background: #3498db; }
+        .btn-excel { background: #3498db; }
         
-        /* تحسين صندوق الترحيل الجانبي ليطابق تماماً الأبعاد الجمالية المقترحة من قبلكم في الصورة */
+        /* 👥 تصميم فخم ومتباعد لكروت التحكم والـ KPI الجانبية لراحة العين */
+        .left-control-panel { display: flex; flex-direction: column; gap: 20px; } /* مساحة فاضية مريحة */
+        
         .transfer-side-box {
-            background: rgba(99, 102, 241, 0.04);
-            padding: 22px;
-            border-radius: 16px;
-            border: 2px solid var(--border);
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+            background: rgba(99, 102, 241, 0.03); padding: 20px; border-radius: 16px; border: 2px solid var(--border); text-align: center;
         }
+        
+        .kpi-business-card {
+            border: 2px solid var(--border); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; background: var(--card-bg);
+        }
+        .kpi-business-card::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 6px; }
+        .kpi-card-success::before { background: var(--secondary); }
+        .kpi-card-danger::before { background: var(--danger); }
+        
+        .kpi-title { font-size: 0.9rem; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+        .kpi-value { font-size: 1.25rem; font-weight: 900; color: var(--text); }
+        .kpi-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
         
         .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1.1rem; text-align: center; }
 
@@ -138,19 +141,19 @@
         </div>
 
         <div id="results-section" style="display:none;">
-            <!-- ⚡ إعادة تنظيم شبكية ذكية لـ عرض الجدول وصندوق التحكم جنباً إلى جنب لمنع الفراغات العريضة -->
+            <!-- ⚡ التوزيع الشبكي الجديد (55% للجدول و 45% للكروت والمؤشرات) جنب لجنب -->
             <div class="row g-4 align-items-start mt-2">
                 
-                <!-- الطرف الأيمن: يشمل الجدول الفعلي والمتوسط الحسابي (مساحة 65%) -->
-                <div class="col-lg-8 col-md-12">
+                <!-- الطرف الأيمن المدمج: الجدول الحاوي لبيانات اليوم (55% من العرض الكلي) -->
+                <div class="col-lg-7 col-md-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
                         <button class="btn btn-sm btn-warning fw-bold text-white px-3" onclick="downloadDailyTableOnly()">📸 صورة جدول اليوم فقط</button>
                     </div>
                     
                     <div id="dailyTableCaptureArea" class="shadow-sm card p-3 mb-0">
-                        <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.07); font-size:1.05rem; padding: 10px; border-radius: 10px;">
-                            📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات.
+                        <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.07); font-size:1rem; padding: 10px; border-radius: 10px;">
+                            📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة.
                         </div>
                         <table class="pro-table m-0" id="summaryTable">
                             <thead>
@@ -168,23 +171,46 @@
                     </div>
                 </div>
 
-                <!-- الطرف الأيسر: صندوق ترحيل التاريخ المقتبس من صورتكم + أزرار المزامنة (مساحة 35%) -->
-                <div class="col-lg-4 col-md-12">
-                    <h5 class="fw-bold text-secondary mb-2 text-center text-lg-start">⚙️ لوحة التحكم والمزامنة</h5>
-                    <div class="transfer-side-box card shadow-sm mb-3">
-                        <label class="fw-bold mb-2 text-muted d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
-                        <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
-                        <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
-                            🚀 ترحيل للتقرير وجوجل شيت
-                        </button>
+                <!-- الطرف الأيسر الاحترافي: كروت الـ KPI المتباعدة والمنظمة تحت بعضها (45% من العرض) -->
+                <div class="col-lg-5 col-md-12">
+                    <div class="left-control-panel">
+                        
+                        <!-- 1. كارت اختيار التاريخ والترحيل -->
+                        <div class="transfer-side-box card shadow-sm">
+                            <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
+                            <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
+                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
+                                🚀 ترحيل للتقرير وجوجل شيت
+                            </button>
+                        </div>
+                        
+                        <!-- 2. كارت أعلى موظف أداءً (KPI 1) -->
+                        <div class="kpi-business-card kpi-card-success shadow-sm">
+                            <div>
+                                <div class="kpi-title">🏆 الموظف الأعلى أداءً اليوم</div>
+                                <div class="kpi-value" id="topEmpName">-</div>
+                            </div>
+                            <div class="kpi-badge text-success fw-extrabold" style="background: rgba(16,185,129,0.15);" id="topEmpValue">0 دقيقة</div>
+                        </div>
+
+                        <!-- 3. كارت أقل موظف أداءً (KPI 2) -->
+                        <div class="kpi-business-card kpi-card-danger shadow-sm">
+                            <div>
+                                <div class="kpi-title">⚠️ الموظف الأقل أداءً اليوم</div>
+                                <div class="kpi-value" id="lowEmpName">-</div>
+                            </div>
+                            <div class="kpi-badge text-danger fw-extrabold" style="background: rgba(239,68,68,0.15);" id="lowEmpValue">0 دقيقة</div>
+                        </div>
+
+                        <!-- زر الإكسيل التنافسي الموضع بالأسفل -->
+                        <button class="btn-action btn-excel w-100 py-2 fs-5 shadow-sm m-0" style="border-radius: 10px;" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
+                        <div id="copyStatus" class="copy-status"></div>
                     </div>
-                    <button class="btn-action btn-excel w-100 py-2 fs-5 shadow-sm" style="border-radius: 10px;" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
-                    <div id="copyStatus" class="copy-status"></div>
                 </div>
 
             </div>
 
-            <!-- صف ومساحة الرسم البياني اليومي المستقل بالأسفل بالكامل عريض وواضح -->
+            <!-- صف شارت التقرير اليومي بالأسفل عريض بالكامل -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
@@ -435,6 +461,18 @@
         
         sortedArray.sort((a, b) => b.mins - a.mins);
         
+        // ⚡ احتساب وحقن أعلى وأقل موظف أداء داخل كروت الـ KPI المضافة
+        if(sortedArray.length > 0) {
+            const topEmp = sortedArray[0];
+            const lowEmp = sortedArray[sortedArray.length - 1];
+            
+            document.getElementById('topEmpName').innerText = topEmp.name;
+            document.getElementById('topEmpValue').innerText = `${topEmp.mins} دقيقة`;
+            
+            document.getElementById('lowEmpName').innerText = lowEmp.name;
+            document.getElementById('lowEmpValue').innerText = `${lowEmp.mins} دقيقة`;
+        }
+
         let chartLabels = [];
         let chartData = [];
 
@@ -454,11 +492,6 @@
             </tr>`;
         });
         
-        if (tbody.children.length === 0) {
-            alert("لم يتم العثور على أي تحويلات مطابقة للموظفين المسجلين بجوجل شيت.");
-            return;
-        }
-
         document.getElementById('results-section').style.display = 'block';
         buildDailyChart(chartLabels, chartData, calculatedAvg);
     }
@@ -504,10 +537,7 @@
                 plugins: {
                     legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
-                        anchor: 'end',
-                        align: 'top',
-                        font: { weight: 'bold', family: 'Cairo', size: 12 },
-                        color: currentTextColor,
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 12 }, color: currentTextColor,
                         formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
