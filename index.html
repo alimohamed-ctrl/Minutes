@@ -48,6 +48,21 @@
         .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
+        /* توسيع عمود الاسم ليصبح مريحاً للأسماء الثنائية والثلاثية */
+        .pro-table th:nth-child(1), .pro-table td:nth-child(1),
+        .monthly-table th:nth-child(1), .monthly-table td:nth-child(1) {
+            min-width: 160px !important;
+            width: 160px !important;
+        }
+
+        /* توسيع العمود الأخير الحامل للجملة الطويلة ليعرض بشكل أفقي احترافي وبدون زحام */
+        .pro-table th:last-child, .pro-table td:last-child,
+        .monthly-table th:last-child, .monthly-table td:last-child {
+            min-width: 180px !important;
+            width: 180px !important;
+            white-space: nowrap !important;
+        }
+
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
         .req-col { color: #b45309 !important; background: rgba(245, 158, 11, 0.05); font-weight: 900; }
@@ -96,6 +111,7 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
+    <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -147,6 +163,7 @@
         </div>
     </div>
 
+    <!-- الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -160,6 +177,7 @@
 
             <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
+            <!-- الجزء الأول: الموظفون -->
             <div id="employeesCaptureArea" class="mb-4">
                 <h4 class="section-title-business">📊 سجل أداء موظفي الفريق</h4>
                 <div class="monthly-scroll">
@@ -184,6 +202,7 @@
                 </div>
             </div>
 
+            <!-- الجزء الثاني: المشرفون -->
             <div id="supervisorsCaptureArea">
                 <h4 class="section-title-business">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
                 <table class="pro-table text-center shadow-sm" id="supervisorTable">
@@ -238,7 +257,6 @@
         document.body.setAttribute('data-theme', theme);
         localStorage.setItem('hr_theme', theme);
         
-        // إعادة بناء وتحديث ألوان التشارات فوراً عند ضغط زر دارك مود لتحديث ألوان الخطوط
         if(document.getElementById('results-section').style.display === 'block') {
             processData(); 
         }
@@ -248,7 +266,6 @@
     }
     if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-    // دالة ديناميكية لجلب ألوان الخطوط المناسبة حسب المظهر الفعلي المختار لمنع مشكلة خطوط الدارك مود
     function getChartTextColor() {
         return document.body.getAttribute('data-theme') === 'dark' ? '#f9fafb' : '#475569';
     }
@@ -318,12 +335,10 @@
 
         exts.forEach(ext => {
             const info = callData[ext];
-            // الموظف والتارجت يقرأ ديناميكياً من شيت جوجل من مصفوفة الـ Employees القادمة من السيرفر
             const emp = employees.find(e => String(e.ext).trim() === String(ext).trim()) || {name:"غير مسجل", target:180};
             
             const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
             
-            // التارجت الفردي المستخدم للحسابات يقرأ من شيت جوجل
             const individualTarget = emp.target || 180;
             const remainingForToday = (individualTarget - info.mins) > 0 ? (individualTarget - info.mins) : '✅';
             const reqMinsValue = (individualTarget - info.mins) > 0 ? `+${individualTarget - info.mins}` : "⭐ مكتمل";
@@ -382,7 +397,7 @@
                         anchor: 'end',
                         align: 'top',
                         font: { weight: 'bold', family: 'Cairo', size: 12 },
-                        color: currentTextColor, // لون الداتا ليبلز يتغير حسب المظهر
+                        color: currentTextColor,
                         formatter: function(value, context) {
                             return context.datasetIndex === 0 ? value : null;
                         }
@@ -447,7 +462,7 @@
     }
 
     function renderMonthlyReport(mKey, monthName) {
-        window.lastMonthKey = mKey; window.lastMonthName = monthName; // حفظ مرجعي لتحديث المظهر
+        window.lastMonthKey = mKey; window.lastMonthName = monthName; 
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
         const maxDay = 31; 
@@ -496,7 +511,6 @@
                     row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 }
                 
-                // التلوين والمطابقة تعتمد على تارجت الموظف الشخصي القادم من الشيت
                 const individualTarget = emp.target || 180;
                 const cls = employeeAverage >= individualTarget ? 'above-avg' : 'below-avg';
                 const reqMinsValue = (individualTarget - employeeAverage) > 0 ? `+${individualTarget - employeeAverage}` : "⭐ مكتمل";
