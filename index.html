@@ -186,14 +186,13 @@
                         <!-- كارت التحكم في ترحيل التاريخ المباشر لجوجل شيت -->
                         <div class="transfer-side-box card shadow-sm mb-0">
                             <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
-                            <!-- 🌟 إصلاح معرّف التاريخ (id) ليعود ويعمل بشكل تلقائي لتاريخ اليوم الحالي فوراً -->
                             <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
                             <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
                                 🚀 ترحيل للتقرير وجوجل شيت
                             </button>
                         </div>
                         
-                        <!-- 🥇 كارت مجمع لأعلى 5 موظفين أداءً اليوم -->
+                        <!-- كارت مجمع لأعلى 5 موظفين أداءً اليوم -->
                         <div class="kpi-business-card kpi-card-success shadow-sm" id="liveTopCard">
                             <div class="kpi-title">🏆 أعلى 5 موظفين أداءً اليوم</div>
                             <div id="top5EmployeesContainer" class="d-flex flex-column gap-2">
@@ -201,7 +200,7 @@
                             </div>
                         </div>
 
-                        <!-- ⚠️ كارت مجمع لأقل 5 موظفين أداءً اليوم -->
+                        <!-- كارت مجمع لأقل 5 موظفين أداءً اليوم -->
                         <div class="kpi-business-card kpi-card-danger shadow-sm" id="liveLowCard">
                             <div class="kpi-title">⚠️ أقل 5 موظفين أداءً اليوم</div>
                             <div id="low5EmployeesContainer" class="d-flex flex-column gap-2">
@@ -325,7 +324,7 @@
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
-    // تفعيل ضبط تاريخ اليوم الحالي بشكل برمي تلقائي ومضمون عند إقلاع الواجهة
+    // تفعيل التوقيت التلقائي بشكل فوري ومباشر
     document.getElementById('transferDate').valueAsDate = new Date();[cite: 1]
 
     let employees = [];
@@ -465,7 +464,6 @@
         
         sortedArray.sort((a, b) => b.mins - a.mins);
         
-        // 📊 حساب وحقن أعلى 5 وأقل 5 موظفين داخل الحاويات المحدثة
         if(sortedArray.length > 0) {
             const top5Container = document.getElementById('top5EmployeesContainer');
             const low5Container = document.getElementById('low5EmployeesContainer');
@@ -913,6 +911,12 @@
         rows.forEach(row => tbody.appendChild(row));
     }
 
+    function downloadMonthlyExcel() {
+        const table = document.getElementById('monthlyReportTable');
+        const wb = XLSX.utils.table_to_book(table, {sheet: "Monthly Performance"});
+        XLSX.writeFile(wb, `Report_${new Date().getMonth()+1}_${new Date().getFullYear()}.xlsx`);
+    }
+
     async function downloadDailyTableOnly() {
         const area = document.getElementById('dailyTableCaptureArea');
         try {
@@ -924,12 +928,11 @@
         } catch (err) { alert("حدث خطأ في استخراج صورة الجدول"); }
     }
 
-    // 📸 الدالة الاستراتيجية الجديدة لإصلاح العطل ودمج الشارت والكروت أفقيّاً أسفل منه بدقة تامة!
+    // 📸 الدالة المتطورة المحدثة والمثالية لالتقاط الشارت في الأعلى والكارتين (أعلى 5 وأقل 5) متجاورين بشكل متناسق بالأسفل في صورة واحدة!
     async function downloadDailyChartOnly() {
         const topCard = document.getElementById('liveTopCard');
         const lowCard = document.getElementById('liveLowCard');
         
-        // 1. إنشاء حاوية مؤقتة فخمة بالخلفية
         const tempWrapper = document.createElement('div');
         tempWrapper.style.position = 'absolute';
         tempWrapper.style.top = '-9999px';
@@ -944,7 +947,7 @@
         
         tempWrapper.innerHTML = `<h3 style="text-align:center; margin-bottom: 25px; font-weight: 900; color: #6366f1;">📈 ملخص الرسم البياني ومؤشرات الأداء اليومية</h3>`;
         
-        // الجزء العلوي: حاوية الشارت الكبيرة عريضة بالكامل لعدم انضغاط الأسماء
+        // 1. الشارت في الأعلى عريض بالكامل
         const chartRow = document.createElement('div');
         chartRow.style.width = '100%';
         chartRow.style.height = '400px';
@@ -958,7 +961,7 @@
         chartRow.appendChild(tempCanvas);
         tempWrapper.appendChild(chartRow);
 
-        // 🌟 التعديل الاستراتيجي المطلوب: صف سفلي مرن يضع الكارتين جنب إلى جنب (أفقيّاً) لراحة السيمترية
+        // 2. الكارتين في الأسفل متجاورين جنباً إلى جنب (أفقيّاً بنسبة 50% لكل كارت)
         const cardsFlexRow = document.createElement('div');
         cardsFlexRow.style.display = 'flex';
         cardsFlexRow.style.gap = '20px';
@@ -980,7 +983,6 @@
 
         document.body.appendChild(tempWrapper);
         
-        // جلب ألوان النصوص والشبكات النشطة لتفادي مشكلة التعطل السابقة
         const currentTextColor = getChartTextColor();
         const currentGridColor = getGridColor();
         
