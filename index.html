@@ -14,10 +14,12 @@
     <style>
         :root { 
             --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #f59e0b; --accent: #6366f1;
-            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #e2e8f0;
+            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #cbd5e1;
+            --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         }
         [data-theme="dark"] {
             --bg: #0b0f19; --card-bg: #111827; --text: #f9fafb; --border: #374151; --primary: #3b82f6;
+            --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
         body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 20px; color: var(--text); transition: 0.3s; }
@@ -38,7 +40,7 @@
         .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 25px; }
         textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 120px; width: 100%; font-size: 1rem; }
 
-        #tableCaptureArea, #monthlyCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 12px; direction: rtl; }
+        #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
         
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
@@ -49,14 +51,18 @@
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
 
-        /* تصميم احترافي مع بوردر واضح وجذاب لحاويات الشارتات */
+        /* حاوية الشارت الاحترافية الفخمة بالبوردر والظلال المتطورة */
         .chart-box-card {
             background: var(--card-bg);
             border: 2px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
-            margin: 30px 0;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03);
+            border-radius: 18px;
+            padding: 24px;
+            margin: 25px 0;
+            box-shadow: var(--chart-box-shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .chart-box-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .chart-container { position: relative; height: 380px; width: 100%; }
 
@@ -90,7 +96,6 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
-    <!-- صفحة التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -132,7 +137,6 @@
                     <tbody></tbody>
                 </table>
                 
-                <!-- حاوية الشارت اليومي المحدثة بالبوردر الواضح -->
                 <div class="chart-box-card">
                     <div class="chart-container">
                         <canvas id="dailyChart"></canvas>
@@ -142,20 +146,20 @@
         </div>
     </div>
 
-    <!-- صفحة الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري</h5>
                 <div>
-                    <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadMonthlyAsImage()">📸 تحميل التقرير الشهري بالكامل كصورة</button>
-                    <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
+                    <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadEmployeesSection()">📸 صورة أداء الموظفين</button>
+                    <button class="btn btn-sm btn-info me-2 fw-bold text-white" onclick="downloadSupervisorsSection()">📸 صورة أداء المشرفين</button>
+                    <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 ملف إكسيل</button>
                 </div>
             </div>
 
             <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
-            <div id="monthlyCaptureArea">
+            <div id="employeesCaptureArea" class="mb-4">
                 <h4 class="section-title-business">📊 سجل أداء موظفي الفريق</h4>
                 <div class="monthly-scroll">
                     <table class="monthly-table" id="monthlyReportTable">
@@ -171,33 +175,34 @@
                     </table>
                 </div>
 
-                <!-- حاوية الشارت الشهري بالبوردر الجديد -->
                 <div class="chart-box-card">
                     <div class="chart-container">
                         <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
+            </div>
 
-                <!-- جدول أداء المشرفين -->
+            <div id="supervisorsCaptureArea">
                 <h4 class="section-title-business">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
                 <table class="pro-table text-center shadow-sm" id="supervisorTable">
                     <thead>
                         <tr>
                             <th onclick="sortTable(0, 'supervisorTable')">اسم المشرف ⇅</th>
-                            <th onclick="sortTable(1, 'supervisorTable', true)">إجمالي مكالمات الفريق ⇅</th>
-                            <th onclick="sortTable(2, 'supervisorTable', true)">متوسط دقائق الفريق الشهري ⇅</th>
+                            <th onclick="sortTable(1, 'supervisorTable', true)">عدد الموظفين ⇅</th>
+                            <th onclick="sortTable(2, 'supervisorTable', true)">إجمالي مكالمات الفريق ⇅</th>
+                            <th onclick="sortTable(3, 'supervisorTable', true)">متوسط دقائق الفريق الشهري ⇅</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
 
-                <!-- حاوية شارت المشرفين بالبوردر الجديد -->
                 <div class="chart-box-card">
                     <div class="chart-container">
                         <canvas id="supervisorChart"></canvas>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -275,7 +280,7 @@
         
         lines.forEach(line => {
             const cols = line.split(/\t|\s{2,}/); if (line.includes("Extension") || cols.length < 3) return;
-            const ext = cols[0].match(/\d+/)[0];
+            const ext = cols[0].match(/\d+/)[0].trim();
             const times = cols.filter(c => c.includes(':') && c.split(':').length === 3);
             const mins = Math.round((timeToSeconds(times[0] || "0:00:00") + timeToSeconds(times[1] || "0:00:00")) / 60);
             if(!callData[ext]) callData[ext] = { mins: 0, calls: 0 };
@@ -295,7 +300,8 @@
 
         exts.forEach(ext => {
             const info = callData[ext];
-            const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
+            // تحسين معالجة ومطابقة النصوص البرمجية لمنع مشكلة "غير مسجل" نهائياً
+            const emp = employees.find(e => String(e.ext).trim() === String(ext).trim()) || {name:"غير مسجل", target:180};
             
             const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
 
@@ -332,12 +338,12 @@
                 }, {
                     type: 'line',
                     label: 'التارجت القياسي (180 دقيقة)',
-                    data: new Array(labels.length).fill(180), // تم تعديل الخط ليكون 180 ثابتاً
+                    data: new Array(labels.length).fill(180),
                     borderColor: '#f59e0b',
                     borderWidth: 3,
                     pointRadius: 0,
                     fill: false,
-                    datalabels: { display: false } // منع ظهور أي أرقام على خط التارجت لمنع التداخل
+                    datalabels: { display: false }
                 }]
             },
             options: { 
@@ -350,7 +356,6 @@
                         font: { weight: 'bold', family: 'Cairo', size: 12 },
                         color: '#475569',
                         formatter: function(value, context) {
-                            // تفعيل إظهار الرقم للأعمدة (index 0) وإخفائه تماماً عن خطوط الـ line
                             return context.datasetIndex === 0 ? value : null;
                         }
                     }
@@ -493,7 +498,7 @@
                     borderWidth: 2.5,
                     pointRadius: 0,
                     fill: false,
-                    datalabels: { display: false } // خط التارجت نظيف بدون أي أرقام
+                    datalabels: { display: false }
                 }]
             },
             options: { 
@@ -530,7 +535,7 @@
 
             tbody.innerHTML += `<tr>
                 <td style="color:var(--accent); font-weight:900;">${supervisorName}</td>
-                <td>${data.totalCalls}</td>
+                <td>${data.employeeCount}</td> <td>${data.totalCalls}</td>
                 <td class="${finalSupervisorAvg >= 180 ? 'above-avg' : 'below-avg'}">${finalSupervisorAvg} دقيقة</td>
             </tr>`;
         }
@@ -559,7 +564,7 @@
                     borderWidth: 2,
                     pointRadius: 0,
                     fill: false,
-                    datalabels: { display: false } // خط التارجت هنا أيضاً خط صامت
+                    datalabels: { display: false }
                 }]
             },
             options: {
@@ -661,19 +666,32 @@
         } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
-    async function downloadMonthlyAsImage() {
+    // تصوير قسم أداء الموظفين منفرداً بجودة عالية وبدون إشراك المشرفين
+    async function downloadEmployeesSection() {
         const scrollContainer = document.querySelector('.monthly-scroll');
-        const area = document.getElementById('monthlyCaptureArea');
+        const area = document.getElementById('employeesCaptureArea');
         const oldOverflow = scrollContainer.style.overflowX;
         scrollContainer.style.overflowX = 'visible'; 
         try {
             const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `سجل_الأداء_الشهري_الشامل.png`;
+            link.download = `أداء_الموظفين_الشهري.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch (err) { alert("حدث خطأ أثناء تحميل السجل بالكامل كصورة."); } 
+        } catch (err) { alert("حدث خطأ أثناء تصوير قسم الموظفين."); } 
         finally { scrollContainer.style.overflowX = oldOverflow; }
+    }
+
+    // تصوير قسم أداء المشرفين منفرداً بشكل نظيف واحترافي
+    async function downloadSupervisorsSection() {
+        const area = document.getElementById('supervisorsCaptureArea');
+        try {
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const link = document.createElement('a');
+            link.download = `تحليل_أداء_المشرفين_الشهري.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } catch (err) { alert("حدث خطأ أثناء تصوير قسم المشرفين."); }
     }
 
     function copyTableAsExcel(tId) {
