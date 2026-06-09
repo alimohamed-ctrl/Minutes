@@ -9,13 +9,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
-            --primary: #1e293b; --secondary: #16a34a; --danger: #dc2626; --warning: #d97706; --accent: #6d28d9;
-            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #cbd5e1;
+            --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #f59e0b; --accent: #6366f1;
+            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #e2e8f0;
         }
         [data-theme="dark"] {
-            --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #475569; --primary: #3b82f6;
+            --bg: #0b0f19; --card-bg: #111827; --text: #f9fafb; --border: #374151; --primary: #3b82f6;
         }
 
         body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 20px; color: var(--text); transition: 0.3s; }
@@ -24,61 +25,47 @@
         .custom-tabs { display: flex; justify-content: center; gap: 10px; }
         .tab-btn { 
             padding: 12px 25px; border: none; background: var(--card-bg); color: var(--text); 
-            font-weight: 700; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: 0.3s;
+            font-weight: 700; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s;
         }
-        .tab-btn.active { background: var(--primary); color: #fff; }
+        .tab-btn.active { background: var(--accent); color: #fff; }
         
         .theme-btn { background: var(--card-bg); color: var(--text); border: 2px solid var(--border); padding: 8px 15px; border-radius: 30px; font-weight: bold; cursor: pointer; }
 
         .page-content { display: none; }
         .page-content.active { display: block; }
 
-        .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 20px; }
-        textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 100px; width: 100%; }
+        .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 25px; }
+        textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 120px; width: 100%; font-size: 1rem; }
 
-        #tableCaptureArea, #monthlyCaptureArea { padding: 30px; background: #ffffff; border-radius: 12px; direction: rtl; }
-        #tableCaptureArea { width: 920px; margin: 0 auto; }
-        #monthlyCaptureArea { background: #ffffff; padding: 20px; border-radius: 12px; }
+        #tableCaptureArea, #monthlyCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 12px; direction: rtl; }
         
-        [data-theme="dark"] #tableCaptureArea, [data-theme="dark"] #monthlyCaptureArea { background: #1e293b; }
-
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); }
-        .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 900; text-align: center; font-size: 1.05rem; border: 1px solid var(--border); }
-        .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); font-size: 1.1rem; }
-        .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.01); }
+        .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
+        .pro-table th:hover, .monthly-table th:hover { opacity: 0.9; background-color: var(--accent); }
+        .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
+        .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
 
-        .avg-summary-box { margin-top: 20px; border-radius: 8px; background: #f1f5f9; border: 1px solid var(--border); padding: 15px; font-size: 1.1rem; font-weight: 900; text-align: center; color: var(--text); }
-        [data-theme="dark"] .avg-summary-box { background: #334155; }
+        .chart-container { position: relative; margin: 30px auto; height: 350px; width: 100%; }
 
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
-        .monthly-table { font-size: 0.9rem; }
-        .monthly-table th, .monthly-table td { padding: 10px 8px; border: 1px solid var(--border); }
         
-        .monthly-table td[contenteditable="true"]:focus {
-            background: #e2e8f0 !important;
-            outline: 2px solid var(--primary);
-            color: #000 !important;
-        }
-
-        .day-header { color: #ffffff !important; font-weight: 900 !important; font-size: 1rem !important; background: var(--primary); }
-        .avg-col { background: #fef3c7; color: #b45309 !important; font-weight: 900; width: 80px; }
-        [data-theme="dark"] .avg-col { background: #78350f; color: #fef3c7 !important; }
-
         .btn-main { background: var(--secondary); color: white; border-radius: 12px; padding: 12px 50px; font-weight: 900; border: none; }
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
         .btn-img { background: #e67e22; } .btn-excel { background: #3498db; }
-        .btn-action:hover, .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
         
-        .transfer-box { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--border); }
-        [data-theme="dark"] .transfer-box { background: #334155; }
+        .transfer-box { background: rgba(99, 102, 241, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--accent); }
         .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1.1rem; text-align: center; }
 
-        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; vertical-align: middle; }
+        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ستايل فلتر المشرفين */
+        .supervisor-filter-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-chip { padding: 8px 18px; border-radius: 20px; background: var(--card-bg); border: 2px solid var(--border); font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -96,14 +83,14 @@
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
             <div class="mt-3">
-                <button class="btn btn-main shadow" onclick="processData()">تحليل أداء اليوم ⚡</button>
+                <button class="btn btn-main shadow" onclick="processData()">تحليل أداء اليوم وإعداد الرسم البياني ⚡</button>
             </div>
         </div>
 
         <div id="results-section" style="display:none;">
             <div class="text-center mb-3">
                 <div class="transfer-box shadow-sm">
-                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل لجوجل شيت والتقرير:</label>
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
                     <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
                         🚀 ترحيل للتقرير وجوجل شيت
@@ -115,20 +102,23 @@
                 <div id="copyStatus" class="copy-status"></div>
             </div>
             
-            <div id="tableCaptureArea" class="shadow-sm">
+            <div id="tableCaptureArea" class="shadow-sm card">
                 <table class="pro-table" id="summaryTable">
                     <thead>
                         <tr>
-                            <th>الاسم</th>
-                            <th>التحويلة</th>
-                            <th>عدد الدقائق</th> <th>عدد المكالمات</th> <th>تارجت الدقائق</th>
-                            <th>المتبقي</th>
+                            <th onclick="sortTable(0, 'summaryTable')">الاسم ⇅</th>
+                            <th onclick="sortTable(1, 'summaryTable')">التحويلة ⇅</th>
+                            <th onclick="sortTable(2, 'summaryTable', true)">عدد الدقائق ⇅</th>
+                            <th onclick="sortTable(3, 'summaryTable', true)">عدد المكالمات ⇅</th>
+                            <th onclick="sortTable(4, 'summaryTable', true)">تارجت الدقائق ⇅</th>
+                            <th onclick="sortTable(5, 'summaryTable')">المتبقي ⇅</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
-                <div class="avg-summary-box" id="avgContainer">
-                    📈 متوسط أداء الفريق اليوم: <strong id="avgValue">0</strong> دقيقة مكالمات.
+                
+                <div class="chart-container">
+                    <canvas id="dailyChart"></canvas>
                 </div>
             </div>
         </div>
@@ -143,17 +133,26 @@
                     <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
                 </div>
             </div>
+
+            <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
             <div id="monthlyCaptureArea">
                 <div class="monthly-scroll">
                     <table class="monthly-table" id="monthlyReportTable">
                         <thead>
                             <tr id="monthlyHeader">
-                                <th>الاسم</th><th>التحويلة</th><th id="daysPlaceholder"></th><th class="avg-col">المتوسط</th>
+                                <th onclick="sortMonthlyTable(0)">الاسم ⇅</th>
+                                <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
+                                <th id="daysPlaceholder"></th>
+                                <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
                 </div>
             </div>
         </div>
@@ -161,10 +160,21 @@
 </div>
 
 <script>
-    // رابط الـ Web App الخاص بك
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
     document.getElementById('transferDate').valueAsDate = new Date();
+
+    let employees = [];
+    let monthlyData = {};
+    let currentProcessedMins = {};
+    let selectedSupervisor = "الكل";
+    
+    // كائنات الـ Charts لمنع التداخل عند التحديث
+    let dailyChartInstance = null;
+    let monthlyChartInstance = null;
+
+    // اتجاهات الترتيب الفوري للجداول
+    let sortDirections = {};
 
     function showPage(pId, btn) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
@@ -177,68 +187,120 @@
         const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.body.setAttribute('data-theme', theme);
         localStorage.setItem('hr_theme', theme);
+        if(dailyChartInstance) { updateChartThemes(); }
     }
     if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-    let employees = [];
-    let monthlyData = {};
-    let currentProcessedMins = {};
-
-    // جلب الموظفين من الشيت من صفحة "بيانات الموظفين"
+    // جلب الموظفين والمشرفين فور إقلاع الواجهة
     async function loadEmployees() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getEmployees`);
             employees = await response.json();
+            renderSupervisorFilters();
         } catch (error) {
-            console.error("خطأ في جلب بيانات الموظفين:", error);
+            console.error("خطأ في جلب بيانات المشرفين والموظفين:", error);
             employees = [
-                {ext: "1116", name: "آية أحمد", target: 180}, {ext: "1089", name: "حنين سمير", target: 180},
-                {ext: "1154", name: "عبدالرحمن علي", target: 180}, {ext: "1600", name: "محمد سيد", target: 180},
-                {ext: "1612", name: "مريم طارق", target: 180}, {ext: "1609", name: "عمرو عبدالعظيم", target: 180}
+                {ext: "1116", name: "آية أحمد", supervisor: "أحمد حسن", target: 180},
+                {ext: "1089", name: "حنين سمير", supervisor: "أحمد حسن", target: 180},
+                {ext: "1154", name: "عبدالرحمن علي", supervisor: "محمد علي", target: 180}
             ];
+            renderSupervisorFilters();
         }
     }
     loadEmployees();
+
+    // إنشاء فلاتر المشرفين بشكل ديناميكي فريد
+    function renderSupervisorFilters() {
+        const container = document.getElementById('supervisorFilters');
+        const supervisors = ["الكل", ...new Set(employees.map(e => e.supervisor).filter(Boolean))];
+        container.innerHTML = "";
+        supervisors.forEach(sup => {
+            const activeClass = sup === selectedSupervisor ? "active" : "";
+            container.innerHTML += `<div class="filter-chip ${activeClass}" onclick="filterBySupervisor('${sup}')">${sup}</div>`;
+        });
+    }
+
+    function filterBySupervisor(sup) {
+        selectedSupervisor = sup;
+        renderSupervisorFilters();
+        const now = new Date();
+        const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+        const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        renderMonthlyReport(mKey, arMonths[now.getMonth()]);
+    }
 
     function timeToSeconds(t) {
         if (!t || !t.includes(':')) return 0;
         const p = t.trim().split(':'); return p.length === 3 ? (+p[0]*3600) + (+p[1]*60) + (+p[2]) : 0;
     }
 
+    // تحليل الأداء اليومي وبناء تشارت الأداء مقارنة بالتارجت المستهدف (180 دقيقة)
     function processData() {
         const input = document.getElementById('rawInput').value.trim(); if (!input) return;
         const lines = input.split('\n'); let callData = {}; currentProcessedMins = {};
+        
         lines.forEach(line => {
             const cols = line.split(/\t|\s{2,}/); if (line.includes("Extension") || cols.length < 3) return;
             const ext = cols[0].match(/\d+/)[0];
-            const times = cols.filter(c => c.includes(':' ) && c.split(':').length === 3);
+            const times = cols.filter(c => c.includes(':') && c.split(':').length === 3);
             const mins = Math.round((timeToSeconds(times[0] || "0:00:00") + timeToSeconds(times[1] || "0:00:00")) / 60);
             if(!callData[ext]) callData[ext] = { mins: 0, calls: 0 };
             callData[ext].mins += mins; callData[ext].calls += (parseInt(cols[1]) + parseInt(cols[2]));
             currentProcessedMins[ext] = callData[ext].mins;
         });
-        const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
-        const exts = Object.keys(callData);
-        if(exts.length === 0) return;
-        const avg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
-        document.getElementById('avgValue').innerText = avg.toFixed(1);
 
-        exts.sort().forEach(ext => {
+        const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
+        const exts = Object.keys(callData).sort();
+        
+        let chartLabels = [];
+        let chartData = [];
+
+        exts.forEach(ext => {
             const info = callData[ext];
             const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
-            const cls = info.mins >= avg ? 'above-avg' : 'below-avg';
             
-            // الاسم أولاً ثم التحويلة لتطابق الثيم الجديد والترويسة
+            chartLabels.push(emp.name);
+            chartData.push(info.mins);
+
             tbody.innerHTML += `<tr>
                 <td>${emp.name}</td>
                 <td>${ext}</td>
-                <td class="${cls}">${info.mins}</td>
-                <td style="color:var(--primary)">${info.calls}</td>
+                <td>${info.mins}</td>
+                <td style="color:var(--accent)">${info.calls}</td>
                 <td>${emp.target}</td>
                 <td>${emp.target - info.mins > 0 ? emp.target - info.mins : '✅'}</td>
             </tr>`;
         });
+        
         document.getElementById('results-section').style.display = 'block';
+        buildDailyChart(chartLabels, chartData);
+    }
+
+    function buildDailyChart(labels, dataValues) {
+        const ctx = document.getElementById('dailyChart').getContext('2d');
+        if(dailyChartInstance) dailyChartInstance.destroy();
+        
+        dailyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'المحقق الفعلي (دقيقة)',
+                    data: dataValues,
+                    backgroundColor: dataValues.map(v => v >= 180 ? '#10b981' : '#ef4444'),
+                    borderRadius: 6
+                }, {
+                    type: 'line',
+                    label: 'التارجت المستهدف (180 دقيقة)',
+                    data: new Array(labels.length).fill(180),
+                    borderColor: '#f59e0b',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
     }
 
     async function transferToMonthly() {
@@ -265,23 +327,19 @@
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: "transferDay",
-                    monthSheet: monthName,
-                    day: day,
-                    data: currentProcessedMins
-                })
+                body: JSON.stringify({ action: "transferDay", monthSheet: monthName, day: day, data: currentProcessedMins })
             });
-            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" (يوم ${day}) بنجاح! 🚀✅`);
+            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" في الـ Sheet بنجاح! 🚀✅`);
+            if (document.getElementById('monthly-page').classList.contains('active')) { fetchMonthlyReport(); }
         } catch (error) {
-            console.error(error);
-            alert("حدث خطأ أثناء ترحيل البيانات لجوجل شيت.");
+            alert("حدث خطأ أثناء الاتصال بالسيرفر.");
         } finally {
             btn.disabled = false;
             btn.innerText = `🚀 ترحيل للتقرير وجوجل شيت`;
         }
     }
 
+    // جلب تلقائي وفوري فور فتح صفحة الأداء الشهري
     async function fetchMonthlyReport() {
         const now = new Date();
         const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -293,9 +351,7 @@
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getMonthly&monthSheet=${encodeURIComponent(monthName)}`);
             monthlyData[mKey] = await response.json();
-        } catch (error) {
-            console.error("تعذر جلب البيانات:", error);
-        }
+        } catch (error) { console.error(error); }
 
         renderMonthlyReport(mKey, monthName);
     }
@@ -303,7 +359,7 @@
     function renderMonthlyReport(mKey, monthName) {
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
-        let maxDay = 31; 
+        const maxDay = 31; 
 
         const header = document.getElementById('monthlyHeader');
         while(header.children.length > 3) header.removeChild(header.children[2]);
@@ -314,53 +370,127 @@
         }
         
         const tbody = document.querySelector('#monthlyReportTable tbody'); tbody.innerHTML = '';
-        employees.forEach(emp => {
-            // الاسم أولاً ثم التحويلة لتطابق الهيكل الجديد للجدول الشهري
+        
+        let chartLabels = [];
+        let chartAverages = [];
+
+        // فلترة الموظفين حسب المشرف الحالي المختار
+        const filteredEmployees = employees.filter(emp => selectedSupervisor === "الكل" || emp.supervisor === selectedSupervisor);
+
+        filteredEmployees.forEach(emp => {
             let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`, total = 0, count = 0;
             for(let i=1; i<=maxDay; i++) { 
                 const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
                 row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 if(v!=='-'){total+=parseInt(v); count++;} 
             }
-            row += `<td class="avg-col">${count?Math.round(total/count):0}</td></tr>`;
+            const averageMins = count ? Math.round(total/count) : 0;
+            row += `<td class="avg-col">${averageMins}</td></tr>`;
             tbody.innerHTML += row;
+
+            chartLabels.push(emp.name);
+            chartAverages.push(averageMins);
+        });
+
+        buildMonthlyChart(chartLabels, chartAverages);
+    }
+
+    function buildMonthlyChart(labels, averages) {
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        if(monthlyChartInstance) monthlyChartInstance.destroy();
+
+        monthlyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'متوسط الأداء الفردي (دقيقة)',
+                    data: averages,
+                    backgroundColor: '#6366f1',
+                    borderRadius: 6
+                }, {
+                    type: 'line',
+                    label: 'التارجت المطلوب (180 دقيقة)',
+                    data: new Array(labels.length).fill(180),
+                    borderColor: '#ef4444',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
         });
     }
 
     async function updateMonthlyDay(mKey, monthName, ext, day, cell) {
         let val = cell.innerText.trim();
-        if (!monthlyData[mKey]) monthlyData[mKey] = {};
-        if (!monthlyData[mKey][ext]) monthlyData[mKey][ext] = {};
-        
         let num = 0;
-        if (val === '' || val === '-') {
-            delete monthlyData[mKey][ext][day];
-            num = "";
-        } else {
+        if (val === '' || val === '-') { delete monthlyData[mKey][ext][day]; num = ""; }
+        else {
             num = parseInt(val);
             if (isNaN(num) || num < 0) { alert("يرجى إدخال رقم صحيح وموجب"); fetchMonthlyReport(); return; }
+            if(!monthlyData[mKey][ext]) monthlyData[mKey][ext] = {};
             monthlyData[mKey][ext][day] = num;
         }
 
         try {
             await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: "updateCell",
-                    monthSheet: monthName,
-                    ext: ext,
-                    day: day,
-                    value: num
-                })
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "updateCell", monthSheet: monthName, ext: ext, day: day, value: num })
             });
+            // تحديث الرسم البياني بعد التعديل الفردي فوراً دون إعادة تحميل الصفحة كاملة
+            const now = new Date();
+            renderMonthlyReport(`${now.getFullYear()}-${now.getMonth()+1}`, monthName);
         } catch (e) { console.error(e); }
-        
-        renderMonthlyReport(mKey, monthName);
     }
 
     function checkEnter(e, cell) { if (e.key === 'Enter') { e.preventDefault(); cell.blur(); } }
+
+    // خوارزمية ترتيب الجداول (Sorting) الفورية والشاملة للبيانات الرقمية والنصية
+    function sortTable(colIndex, tableId, isNumeric = false) {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        sortDirections[colIndex] = !sortDirections[colIndex];
+        const dir = sortDirections[colIndex] ? 1 : -1;
+
+        rows.sort((a, b) => {
+            let valA = a.children[colIndex].innerText.trim();
+            let valB = b.children[colIndex].innerText.trim();
+            if(valA === '✅') valA = '0';
+            if(valB === '✅') valB = '0';
+
+            if (isNumeric) {
+                return (parseFloat(valA) - parseFloat(valB)) * dir;
+            }
+            return valA.localeCompare(valB, 'ar', {numeric: true}) * dir;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    function sortMonthlyTable(colIndex, isAvg = false) {
+        const table = document.getElementById('monthlyReportTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        sortDirections[colIndex] = !sortDirections[colIndex];
+        const dir = sortDirections[colIndex] ? 1 : -1;
+
+        rows.sort((a, b) => {
+            // إذا كان الترتيب حسب المتوسط (العمود الأخير)
+            let cellA = isAvg ? a.querySelector('.avg-col').innerText : a.children[colIndex].innerText;
+            let cellB = isAvg ? b.querySelector('.avg-col').innerText : b.children[colIndex].innerText;
+            
+            if(colIndex === 0 || colIndex === 1) {
+                return cellA.localeCompare(cellB, 'ar', {numeric: true}) * dir;
+            } else {
+                return (parseInt(cellA || 0) - parseInt(cellB || 0)) * dir;
+            }
+        });
+        rows.forEach(row => tbody.appendChild(row));
+    }
 
     function downloadMonthlyExcel() {
         const table = document.getElementById('monthlyReportTable');
@@ -371,45 +501,32 @@
     async function downloadTableAsImage() {
         const area = document.getElementById('tableCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 3, backgroundColor: "#ffffff" });
-            const image = canvas.toDataURL("image/png");
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
-            const now = new Date();
-            link.download = `تقرير_الأداء_اليومي_${now.getDate()}_${now.getMonth()+1}_${now.getFullYear()}.png`;
-            link.href = image;
+            link.download = `تقرير_الأداء_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
+            link.href = canvas.toDataURL("image/png");
             link.click();
-            showStatus("تم إنشاء وتحميل صورة التقرير اليومي بنجاح! 📸");
-        } catch (err) { alert("حدث خطأ أثناء تحميل الصورة."); }
+        } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
     async function downloadMonthlyAsImage() {
         const scrollContainer = document.querySelector('.monthly-scroll');
-        const table = document.getElementById('monthlyReportTable');
         const area = document.getElementById('monthlyCaptureArea');
-        if(table.rows.length <= 1) return alert("لا توجد بيانات كافية لتصويرها.");
         const oldOverflow = scrollContainer.style.overflowX;
-        const oldWidth = area.style.width;
         scrollContainer.style.overflowX = 'visible';
-        area.style.width = (table.offsetWidth + 60) + 'px'; 
         try {
-            const canvas = await html2canvas(area, { scale: 3, backgroundColor: "#ffffff" });
-            const image = canvas.toDataURL("image/png");
+            const canvas = await html2canvas(area, { scale: 2 });
             const link = document.createElement('a');
-            const now = new Date();
-            link.download = `تقرير_الأداء_الشهري_العام_${now.getMonth()+1}_${now.getFullYear()}.png`;
-            link.href = image;
+            link.download = `سجل_الأداء_الشهري.png`;
+            link.href = canvas.toDataURL("image/png");
             link.click();
-            showStatus("تم إنشاء وتحميل صورة التقرير الشهري بنجاح! 📸");
-        } catch (err) { alert("حدث خطأ أثناء التقاط صورة السجل."); } finally {
-            scrollContainer.style.overflowX = oldOverflow;
-            area.style.width = oldWidth;
-        }
+        } catch (err) { alert("حدث خطأ"); } finally { scrollContainer.style.overflowX = oldOverflow; }
     }
 
     function copyTableAsExcel(tId) {
         const rows = Array.from(document.querySelectorAll(`#${tId} tr`));
         let text = rows.map(r => Array.from(r.children).map(c => c.innerText).join('\t')).join('\n');
-        navigator.clipboard.writeText(text); showStatus("تم نسخ النص للإكسيل! 📋");
+        navigator.clipboard.writeText(text); showStatus("تم نسخ الجدول للإكسيل! 📋");
     }
 
     function showStatus(msg) {
