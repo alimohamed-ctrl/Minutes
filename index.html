@@ -42,7 +42,7 @@
         .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 25px; }
         textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 120px; width: 100%; font-size: 1rem; }
 
-        #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
+        #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea, #dailyTableCaptureArea, #dailyChartCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
         
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; table-layout: auto !important; }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
@@ -50,7 +50,6 @@
         .pro-table td, .monthly-table td { padding: 14px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
-        /* 📊 تحسين وتصغير حجم الخلايا في التقرير اليومي لمنع السكرول وضغط الفراغات */
         #summaryTable th, #summaryTable td {
             padding: 8px 4px !important;
             font-size: 0.95rem !important;
@@ -82,13 +81,16 @@
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
         
         .btn-main { background: var(--secondary); color: white; border-radius: 12px; padding: 12px 50px; font-weight: 900; border: none; }
+        .btn-main:disabled { background: var(--warning) !important; opacity: 0.85; cursor: not-allowed; }
+        .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
         .btn-img { background: #e67e22; } .btn-excel { background: #3498db; }
         
         .transfer-box { background: rgba(99, 102, 241, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--accent); }
         .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1.1rem; text-align: center; }
 
-        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; }
+        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .supervisor-filter-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
@@ -120,7 +122,9 @@
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
             <div class="mt-3">
-                <button class="btn btn-main shadow" onclick="processData()">تحليل أداء اليوم وإعداد الرسم البياني ⚡</button>
+                <button class="btn btn-main shadow" id="mainAnalyzeBtn" disabled>
+                    🔄 جاري ربط النظام بجوجل شيت... <span class="loading-spinner"></span>
+                </button>
             </div>
         </div>
 
@@ -129,18 +133,21 @@
                 <div class="transfer-box shadow-sm">
                     <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
-                    <!-- 🚨 تم إزالة جملة التنبيه الحمراء تماماً من هنا بناءً على طلبك -->
                     <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
                         🚀 ترحيل للتقرير وجوجل شيت
                     </button>
                 </div>
                 <br>
-                <button class="btn-action btn-img" onclick="downloadTableAsImage()">تحميل التقرير كصورة 📸</button>
                 <button class="btn-action btn-excel" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
                 <div id="copyStatus" class="copy-status"></div>
             </div>
             
-            <div id="tableCaptureArea" class="shadow-sm card">
+            <!-- 📸 فصل التقرير اليومي: الجزء الأول لجدول اليومي منفرداً -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
+                <button class="btn btn-sm btn-warning fw-bold text-white" onclick="downloadDailyTableOnly()">📸 صورة جدول اليوم فقط</button>
+            </div>
+            <div id="dailyTableCaptureArea" class="shadow-sm card mb-4">
                 <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.08); font-size:1.1rem; padding: 8px;">
                     📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات.
                 </div>
@@ -157,8 +164,15 @@
                     </thead>
                     <tbody></tbody>
                 </table>
-                
-                <div class="chart-box-card">
+            </div>
+
+            <!-- 📸 فصل التقرير اليومي: الجزء الثاني لشارت اليومي منفرداً -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لتحليل اليوم</h5>
+                <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم فقط</button>
+            </div>
+            <div id="dailyChartCaptureArea" class="shadow-sm card">
+                <div class="chart-box-card m-0">
                     <div class="chart-container">
                         <canvas id="dailyChart"></canvas>
                     </div>
@@ -179,7 +193,7 @@
 
             <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
-            <!-- الجزء الأول: الموظفون -->
+            <!-- الجزء الأول: الموظفون الشهري -->
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h4 class="section-title-business m-0">📊 سجل أداء موظفي الفريق</h4>
@@ -225,7 +239,7 @@
                 </div>
             </div>
 
-            <!-- الجزء الثاني: المشرفون -->
+            <!-- الجزء الثاني: المشرفون الشهري -->
             <div id="supervisorsCaptureArea" class="mt-5">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                     <h4 class="section-title-business m-0">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
@@ -304,13 +318,19 @@
     }
 
     async function loadEmployees() {
+        const analyzeBtn = document.getElementById('mainAnalyzeBtn');
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getEmployees`);
             employees = await response.json();
             renderSupervisorFilters();
+            
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = "تحليل أداء اليوم وإعداد الرسم البياني ⚡";
         } catch (error) {
             console.error("خطأ في جلب البيانات:", error);
             renderSupervisorFilters();
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = "تحليل أداء اليوم وإعداد الرسم البياني ⚡";
         }
     }
     loadEmployees();
@@ -360,7 +380,6 @@
         const calculatedAvg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
         document.getElementById('avgValue').innerText = calculatedAvg.toFixed(1);
         
-        // تحضير مصفوفة فرز البيانات لترتيبها تلقائياً من الأعلى لـ الأقل
         let sortedArray = [];
 
         exts.forEach(ext => {
@@ -379,7 +398,6 @@
             });
         });
         
-        // 🚨 إجراء السورت التلقائي من الأعلى للأقل بناءً على عدد الدقائق
         sortedArray.sort((a, b) => b.mins - a.mins);
         
         let chartLabels = [];
@@ -455,9 +473,7 @@
                         align: 'top',
                         font: { weight: 'bold', family: 'Cairo', size: 12 },
                         color: currentTextColor,
-                        formatter: function(value, context) {
-                            return context.datasetIndex === 0 ? value : null;
-                        }
+                        formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
                 scales: { 
@@ -489,9 +505,7 @@
 
         try {
             await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "transferDay", monthSheet: monthName, day: day, data: currentProcessedMins })
             });
             showStatus(`تم ترحيل البيانات وتحديث قاعدة بيانات التارجت بنجاح! 🚀✅`);
@@ -548,8 +562,7 @@
         
         const tbody = document.querySelector('#monthlyReportTable tbody'); tbody.innerHTML = '';
         
-        let chartLabels = [];
-        let chartAverages = [];
+        let unsortedEmployeesData = [];
         let supervisorAnalytics = {};
 
         employees.forEach(emp => {
@@ -576,28 +589,44 @@
             }
 
             if (selectedSupervisor === "الكل" || emp.supervisor === selectedSupervisor) {
-                let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`;
-                
-                for(let i = activeStartDay; i <= activeEndDay; i++) { 
-                    const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
-                    const isVacation = (v === '-') ? 'class="vacation-cell"' : '';
-                    row += `<td ${isVacation} contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
-                }
-                
                 const individualTarget = emp.target || 180;
-                const cls = employeeAverage >= individualTarget ? 'above-avg' : 'below-avg';
-                
                 var totalRequiredMins = activeDays * 180;
                 var cumulativeGap = totalRequiredMins - totalMins;
                 var reqMinsValue = cumulativeGap > 0 ? `+${cumulativeGap}` : "⭐ مكتمل";
 
-                row += `<td class="avg-col ${cls}">${employeeAverage}</td>`;
-                row += `<td contenteditable="true" class="req-col">${reqMinsValue}</td></tr>`;
-                tbody.innerHTML += row;
-
-                chartLabels.push(emp.name);
-                chartAverages.push(employeeAverage);
+                unsortedEmployeesData.push({
+                    emp: emp,
+                    average: employeeAverage,
+                    target: individualTarget,
+                    required: reqMinsValue,
+                    ext: emp.ext
+                });
             }
+        });
+
+        // 🚨 إجراء السورت التلقائي لجدول وشارت الأداء الشهري بناءً على المتوسط من الأعلى للأقل
+        unsortedEmployeesData.sort((a, b) => b.average - a.average);
+
+        let chartLabels = [];
+        let chartAverages = [];
+
+        unsortedEmployeesData.forEach(item => {
+            let row = `<tr><td>${item.emp.name}</td><td>${item.ext}</td>`;
+            
+            for(let i = activeStartDay; i <= activeEndDay; i++) { 
+                const v = data[item.ext]?.[i] !== undefined && data[item.ext]?.[i] !== null ? data[item.ext][i] : '-'; 
+                const isVacation = (v === '-') ? 'class="vacation-cell"' : '';
+                row += `<td ${isVacation} contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${item.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
+            }
+            
+            const cls = item.average >= item.target ? 'above-avg' : 'below-avg';
+
+            row += `<td class="avg-col ${cls}">${item.average}</td>`;
+            row += `<td contenteditable="true" class="req-col">${item.required}</td></tr>`;
+            tbody.innerHTML += row;
+
+            chartLabels.push(item.emp.name);
+            chartAverages.push(item.average);
         });
 
         buildMonthlyChart(chartLabels, chartAverages);
@@ -799,38 +828,62 @@
         XLSX.writeFile(wb, `Report_${new Date().getMonth()+1}_${new Date().getFullYear()}.xlsx`);
     }
 
-    async function downloadTableAsImage() {
-        const area = document.getElementById('tableCaptureArea');
+    // 📸 زر مخصص لالتقاط صورة لجدول التقرير اليومي فقط
+    async function downloadDailyTableOnly() {
+        const area = document.getElementById('dailyTableCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `تقرير_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
+            link.download = `جدول_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
+        } catch (err) { alert("حدث خطأ في استخراج صورة الجدول"); }
     }
 
-    async function downloadEmployeesSection() {
+    // 📸 زر مخصص لالتقاط صورة لشارت التقرير اليومي فقط
+    async function downloadDailyChartOnly() {
+        const area = document.getElementById('dailyChartCaptureArea');
+        try {
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const link = document.createElement('a');
+            link.download = `شارت_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } catch (err) { alert("حدث خطأ في استخراج صورة الشارت"); }
+    }
+
+    async function downloadJustTableSection() {
         const scrollContainer = document.querySelector('.monthly-scroll');
-        const area = document.getElementById('employeesCaptureArea');
+        const area = document.getElementById('justTableCaptureArea');
         const oldOverflow = scrollContainer.style.overflowX;
         scrollContainer.style.overflowX = 'visible'; 
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `أداء_الموظفين_الشهري.png`;
+            link.download = `جدول_أداء_الموظفين_فقط.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch (err) { alert("حدث خطأ أثناء تصوير قسم الموظفين."); } 
+        } catch (err) { alert("حدث خطأ في تصوير الجدول."); } 
         finally { scrollContainer.style.overflowX = oldOverflow; }
+    }
+
+    async function downloadJustChartSection() {
+        const area = document.getElementById('justChartCaptureArea');
+        try {
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const link = document.createElement('a');
+            link.download = `رسم_بياني_الموظفين_فقط.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } catch (err) { alert("حدث خطأ في تصوير الشارت."); }
     }
 
     async function downloadSupervisorsSection() {
         const area = document.getElementById('supervisorsCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `تحليل_أداء_المشرفين_الشهري.png`;
+            link.download = `تحليل_وقسم_المشرفين_الكامل.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         } catch (err) { alert("حدث خطأ أثناء تصوير قسم المشرفين."); }
