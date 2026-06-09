@@ -48,7 +48,6 @@
         .pro-table td, .monthly-table td { padding: 14px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
-        /* مواءمة وتصغير حجم خلايا الجدول الشهري ليحافظ على ميزة الـ Autofit والظهور الكامل */
         .monthly-table th, .monthly-table td {
             padding: 8px 4px !important;
             font-size: 0.85rem !important;
@@ -106,7 +105,6 @@
         .filter-chip { padding: 8px 18px; border-radius: 20px; background: var(--card-bg); border: 2px solid var(--border); font-weight: 700; cursor: pointer; transition: 0.2s; }
         .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
         
-        /* ستايل شريط أزرار التحكم في إخفاء وإظهار أعمدة الأيام */
         .days-toggle-bar { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
         .toggle-days-btn { font-size: 0.85rem; font-weight: 700; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); transition: 0.2s; }
         .toggle-days-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -138,6 +136,7 @@
                 <div class="transfer-box shadow-sm">
                     <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
+                    <label class="fw-bold text-danger d-block mb-2" id="liveTargetNotice"></label>
                     <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
                         🚀 ترحيل للتقرير وجوجل شيت
                     </button>
@@ -207,7 +206,7 @@
                                 <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
                                 <th id="daysPlaceholder"></th>
                                 <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
-                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">المطلوب للتارجت الشهري ⇅</th>
+                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">الدقائق الزيادة المطلوبة ⇅</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -263,7 +262,6 @@
     let supervisorChartInstance = null;
     let sortDirections = {};
     
-    // متغيرات لحفظ نطاق عرض الأيام الحالي النشط
     let activeStartDay = 1;
     let activeEndDay = 31;
 
@@ -378,6 +376,7 @@
         });
         
         document.getElementById('results-section').style.display = 'block';
+        document.getElementById('liveTargetNotice').innerText = "⚠️ ترحيل الأداء سيقوم بتحديث تارجت اليوم التالي تلقائياً في الشيت بناءً على العجز المتراكم الحالي.";
         buildDailyChart(chartLabels, chartData, calculatedAvg);
     }
 
@@ -442,7 +441,7 @@
 
         const btn = document.getElementById('transferBtn');
         btn.disabled = true;
-        btn.innerHTML = `جاري الترحيل الفوري... <span class="loading-spinner"></span>`;
+        btn.innerHTML = `جاري الترحيل الفوري وتعديل تارجت الشيت... <span class="loading-spinner"></span>`;
 
         if(!monthlyData[mKey]) monthlyData[mKey] = {};
         for(let ex in currentProcessedMins) { 
@@ -457,7 +456,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "transferDay", monthSheet: monthName, day: day, data: currentProcessedMins })
             });
-            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" بنجاح! 🚀✅`);
+            showStatus(`تم ترحيل البيانات وتحديث قاعدة بيانات التارجت بنجاح! 🚀✅`);
+            loadEmployees(); // تحديث أرقام التارجت فريش من الشيت بعد التعديل
         } catch (error) { alert("حدث خطأ أثناء الترحيل."); }
         finally {
             btn.disabled = false;
@@ -471,17 +471,17 @@
         const monthName = arMonths[now.getMonth()];
         const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
         
-        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName} (جاري المزامنة مع جوجل شيت...)`;
+        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName} (جاري المزامنة والحساب التراكمي للتارجت...)`;
 
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getMonthly&monthSheet=${encodeURIComponent(monthName)}`);
             monthlyData[mKey] = await response.json();
+            await loadEmployees(); // جلب التارجت المحدث فريش من الشيت بعد معالجة الصفحة الشهرية
         } catch (error) { console.error(error); }
 
         renderMonthlyReport(mKey, monthName);
     }
 
-    // دالة التحكم الديناميكية في نطاق الأيام لإخفاء الأعمدة الزائدة والتحكم في تفتيت العرض
     function toggleDaysVisibility(startDay, endDay, btnElement) {
         activeStartDay = startDay;
         activeEndDay = endDay;
@@ -499,8 +499,8 @@
         window.lastMonthKey = mKey; window.lastMonthName = monthName; 
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
-        
-        // بناء الأعمدة بناء على النطاق النشط الذي تم اختياره من الفلتر
+        const maxDay = 31; 
+
         const header = document.getElementById('monthlyHeader');
         while(header.children.length > 4) header.removeChild(header.children[2]);
         
@@ -518,7 +518,7 @@
         employees.forEach(emp => {
             let totalMins = 0, activeDays = 0, totalCallsEstimate = 0;
             
-            // احتساب المتوسط الإجمالي للشهر كاملاً 31 يوم لضمان دقة التقارير دائماً بالخلفية
+            // حساب البيانات التراكمية بناءً على كامل أيام العمل الفعلية المسجلة
             for(let i = 1; i <= 31; i++) {
                 const v = data[emp.ext]?.[i];
                 if(v !== undefined && v !== null && v !== '-') {
@@ -542,15 +542,17 @@
             if (selectedSupervisor === "الكل" || emp.supervisor === selectedSupervisor) {
                 let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`;
                 
-                // حقن أعمدة الأيام المختارة فقط لتظهر في واجهة الجدول والشاشة
                 for(let i = activeStartDay; i <= activeEndDay; i++) { 
                     const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
                     row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 }
                 
-                const individualTarget = emp.target || 180;
-                const cls = employeeAverage >= individualTarget ? 'above-avg' : 'below-avg';
-                const reqMinsValue = (individualTarget - employeeAverage) > 0 ? `+${individualTarget - employeeAverage}` : "⭐ مكتمل";
+                const cls = employeeAverage >= 180 ? 'above-avg' : 'below-avg';
+                
+                // تعديل المعادلة الحسابية: (أيام العمل الفعلية في الشهر × 180) - إجمالي المحقق الفعلي
+                var totalRequiredMins = activeDays * 180;
+                var cumulativeGap = totalRequiredMins - totalMins;
+                var reqMinsValue = cumulativeGap > 0 ? `+${cumulativeGap}` : "⭐ مكتمل";
 
                 row += `<td class="avg-col ${cls}">${employeeAverage}</td>`;
                 row += `<td class="req-col">${reqMinsValue}</td></tr>`;
