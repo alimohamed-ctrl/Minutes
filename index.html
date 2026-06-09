@@ -24,9 +24,14 @@
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
-        body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 20px; color: var(--text); transition: 0.3s; }
+        /* تثبيت الهيدر العلوي بشكل احترافي أثناء عمل Scroll مع إضافة مساحة تنفس وحماية للخلفية */
+        body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 100px; color: var(--text); transition: 0.3s; }
         
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .header-top { 
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1050; background-color: var(--bg); padding: 15px 25px;
+            border-bottom: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: background-color 0.3s, border-color 0.3s;
+        }
         .custom-tabs { display: flex; justify-content: center; gap: 10px; }
         .tab-btn { 
             padding: 12px 25px; border: none; background: var(--card-bg); color: var(--text); 
@@ -80,11 +85,9 @@
         .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
-        .btn-excel { background: #3498db; }
         
         .left-control-panel { display: flex; flex-direction: column; gap: 20px; }
         
-        /* 🚨 تم إزالة الارتفاع الإجباري h-100 لتفادي المساحة البيضاء الزائدة المتداخلة بالصورة */
         .separator-border-right {
             border-right: 2px dashed var(--border);
             padding-right: calc(var(--bs-gutter-x) * .5);
@@ -127,15 +130,16 @@
 </head>
 <body>
 
-<div class="container-fluid px-4">
-    <div class="header-top">
-        <div class="custom-tabs">
-            <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
-            <button class="tab-btn" onclick="showPage('monthly-page', this)">📅 الأداء الشهري</button>
-        </div>
-        <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
+<!-- الهيدر العلوي الثابت والمحمي بالـ Sticky Scroll -->
+<div class="header-top">
+    <div class="custom-tabs">
+        <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
+        <button class="tab-btn" onclick="showPage('monthly-page', this)">📅 الأداء الشهري</button>
     </div>
+    <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
+</div>
 
+<div class="container-fluid px-4">
     <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
@@ -148,23 +152,10 @@
         </div>
 
         <div id="results-section" style="display:none;">
-            <div class="text-center mb-3">
-                <div class="transfer-box shadow-sm">
-                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
-                    <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
-                    <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
-                        🚀 ترحيل للتقرير وجوجل شيت
-                    </button>
-                </div>
-                <br>
-                <button class="btn-action btn-excel" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
-                <div id="copyStatus" class="copy-status"></div>
-            </div>
-            
-            <!-- ⚡ التوزيع الشبكي السيمتري المحسن لإنهاء الفراغ الأبيض رأسياً -->
+            <!-- التوزيع الشبكي السيمتري المحسن المتناسق 50% / 50% -->
             <div class="row g-4 align-items-start mt-1">
                 
-                <!-- الطرف الأيمن: جدول الأداء اليومي الفعلي ومربع المتوسط (ينتهي آلياً بانتهاء الصفوف) -->
+                <!-- الطرف الأيمن: جدول الأداء اليومي الفعلي ومربع المتوسط -->
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
@@ -191,15 +182,15 @@
                     </div>
                 </div>
 
-                <!-- الطرف الأيسر: لوحة التحكم الجانبية والكروت المستقلة -->
+                <!-- الطرف الأيسر: لوحة التحكم الجانبية والكروت المستقلة (🚨 تم إزالة زر نسخ الإكسيل تماماً من هنا) -->
                 <div class="col-lg-6 col-md-12 separator-border-right">
                     <div class="left-control-panel">
                         
                         <!-- كارت التحكم في ترحيل التاريخ المباشر لجوجل شيت -->
                         <div class="transfer-side-box card shadow-sm mb-0">
                             <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
-                            <input type="date" id="transferDateSide" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;" onchange="syncDates(this.value)">
-                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
+                            <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
+                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
                                 🚀 ترحيل للتقرير وجوجل شيت
                             </button>
                         </div>
@@ -219,9 +210,6 @@
                                 <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
                         </div>
-
-                        <button class="btn-action btn-excel w-100 py-2 fs-5 shadow-sm m-0" style="border-radius: 10px;" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
-                        <div id="copyStatus" class="copy-status"></div>
                     </div>
                 </div>
 
@@ -338,12 +326,6 @@
     Chart.register(ChartDataLabels);
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
-
-    // مزامنة التواريخ بين الصندوقين لمنع التضارب
-    function syncDates(val) {
-        document.getElementById('transferDate').value = val;
-    }
-    document.getElementById('transferDateSide').value = document.getElementById('transferDate').value;
 
     let employees = [];
     let monthlyData = {};
@@ -946,13 +928,11 @@
         } catch (err) { alert("حدث خطأ في استخراج صورة الجدول"); }
     }
 
-    // 📸 الدالة المتطورة والمحدثة لدمج الشارت اليومي مع كروت الـ KPI الجانبية تلقائياً في صورة واحدة فخمة ومثالية للجروبات!
     async function downloadDailyChartOnly() {
         const originalChartContainer = document.getElementById('actualChartContainerBox');
         const topCard = document.getElementById('liveTopCard');
         const lowCard = document.getElementById('liveLowCard');
         
-        // 1. إنشاء حاوية مؤقتة مخفية في الصفحة ومصممة بأسلوب البيزنس الشبكي المتجاور
         const tempWrapper = document.createElement('div');
         tempWrapper.style.position = 'absolute';
         tempWrapper.style.top = '-9999px';
@@ -965,16 +945,13 @@
         tempWrapper.style.direction = 'rtl';
         tempWrapper.style.borderRadius = '16px';
         
-        // عنوان الصورة المدمجة فخم
         tempWrapper.innerHTML = `<h3 style="text-align:center; margin-bottom: 25px; font-weight: 900; color: #6366f1;">📈 ملخص الرسم البياني ومؤشرات الأداء اليومية</h3>`;
         
-        // صف مرن يتسع للشارت العريض والكروت الجانبية المستقلة مع مسافات تنفس مريحة
         const flexRow = document.createElement('div');
         flexRow.style.display = 'flex';
         flexRow.style.gap = '25px';
         flexRow.style.alignItems = 'center';
         
-        // الجناح الأيمن المدمج: حاوية الشارت الكبيرة (60% من العرض)
         const chartCol = document.createElement('div');
         chartCol.style.flex = '0 0 62%';
         chartCol.style.height = '400px';
@@ -983,18 +960,15 @@
         chartCol.style.padding = '15px';
         chartCol.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff';
         
-        // إنشاء كانفاس جديد مؤقت لنسخ وحقن أبعاد الشارت الحالي بدقة
         const tempCanvas = document.createElement('canvas');
         chartCol.appendChild(tempCanvas);
         
-        // الجناح الأيسر المدمج: حاوية الكروت متراصة رأسياً (38% من العرض)
         const cardsCol = document.createElement('div');
         cardsCol.style.flex = '0 0 35%';
         cardsCol.style.display = 'flex';
         cardsCol.style.flexDirection = 'column';
         cardsCol.style.gap = '20px';
         
-        // استنساخ كروت التوب واللو الفعليين بدون المساس بأماكنهم على شاشة المدير
         const clonedTop = topCard.cloneNode(true);
         const clonedLow = lowCard.cloneNode(true);
         clonedTop.style.width = '100%';
@@ -1007,31 +981,29 @@
         tempWrapper.appendChild(flexRow);
         document.body.appendChild(tempWrapper);
         
-        // إعادة رسم جرافيك الـ Chart داخل الكانفاس الجديد بنفس إعدادات الألوان النشطة بالمتصفح
         const tempChart = new Chart(tempCanvas.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: dailyChartInstance.data.labels,
-                datasets: JSON.parse(JSON.stringify(dailyChartInstance.data.datasets)) // نسخ عميق للبيانات والتلوين
+                datasets: JSON.parse(JSON.stringify(dailyChartInstance.data.datasets))
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { labels: { color: getChartTextColor(), font: { family: 'Cairo', weight: 'bold' } } },
+                    legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: {
-                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 11 }, color: getChartTextColor(),
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 11 }, color: currentTextColor,
                         formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
                 scales: {
-                    x: { ticks: { color: getChartTextColor(), font: { family: 'Cairo', weight: 'bold' } }, grid: { color: getGridColor() } },
-                    y: { beginAtZero: true, ticks: { color: getChartTextColor() }, grid: { color: getGridColor() } }
+                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: getGridColor() } },
+                    y: { beginAtZero: true, ticks: { color: currentTextColor }, grid: { color: getGridColor() } }
                 }
             }
         });
         
-        // تأخير زمني ميكروسكوبي يضمن للمحرك اكتمال رسم الخطوط والملصقات بدقة قبل التقاط الشاشة
         setTimeout(async () => {
             try {
                 const canvasImage = await html2canvas(tempWrapper, { scale: 2, backgroundColor: null });
@@ -1042,7 +1014,6 @@
             } catch (err) {
                 alert("حدث خطأ أثناء استخراج الصورة المدمجة.");
             } finally {
-                // تدمير الكائنات المؤقتة وحذف الحاوية تماماً من الخلفية بعد التحميل للحفاظ على خفة وسرعة الموقع
                 tempChart.destroy();
                 document.body.removeChild(tempWrapper);
             }
@@ -1084,12 +1055,6 @@
             link.href = canvas.toDataURL("image/png");
             link.click();
         } catch (err) { alert("حدث خطأ أثناء تصوير قسم المشرفين."); }
-    }
-
-    function copyTableAsExcel(tId) {
-        const rows = Array.from(document.querySelectorAll(`#${tId} tr`));
-        let text = rows.map(r => Array.from(r.children).map(c => c.innerText).join('\t')).join('\n');
-        navigator.clipboard.writeText(text); showStatus("تم نسخ الجدول للإكسيل! 📋");
     }
 
     function showStatus(msg) {
