@@ -334,6 +334,7 @@
 
     function renderSupervisorFilters() {
         const container = document.getElementById('supervisorFilters');
+        if(!container) return;
         const supervisors = ["الكل", ...new Set(employees.map(e => e.supervisor).filter(Boolean))];
         container.innerHTML = "";
         supervisors.forEach(sup => {
@@ -356,23 +357,37 @@
         const p = t.trim().split(':'); return p.length === 3 ? (+p[0]*3600) + (+p[1]*60) + (+p[2]) : 0;
     }
 
+    // ⚡ دالة قراءة ومعالجة بيانات ياستر الذكية والمصححة بالكامل
     function processData() {
         const input = document.getElementById('rawInput').value.trim(); if (!input) return;
         const lines = input.split('\n'); let callData = {}; currentProcessedMins = {};
         
         lines.forEach(line => {
-            const cols = line.split(/\t|\s{2,}/); if (line.includes("Extension") || cols.length < 3) return;
-            const ext = cols[0].match(/\d+/)[0].trim();
-            const times = cols.filter(c => c.includes(':') && c.split(':').length === 3); // 🌟 تم إصلاح المسافة الخاطئة هنا بنجاح ليعمل الفرز فوراً
+            if (!line.trim()) return;
+            // تقسيم السطر بمرونة تامة سواء عبر علامات التاب المرفوعة أو المسافات المتعددة لتفادي التوقف
+            const cols = line.split(/\t|\s{2,}/); 
+            if (line.includes("Extension") || cols.length < 3) return;
+            
+            const extMatch = cols[0].match(/\d+/);
+            if (!extMatch) return;
+            const ext = extMatch[0].trim();
+            
+            const times = cols.filter(c => c.includes(':') && c.split(':').length === 3);
+            if (times.length === 0) return;
+            
             const mins = Math.round((timeToSeconds(times[0] || "0:00:00") + timeToSeconds(times[1] || "0:00:00")) / 60);
             if(!callData[ext]) callData[ext] = { mins: 0, calls: 0 };
-            callData[ext].mins += mins; callData[ext].calls += (parseInt(cols[1]) + parseInt(cols[2]));
+            callData[ext].mins += mins; 
+            callData[ext].calls += (parseInt(cols[1]) || 0) + (parseInt(cols[2]) || 0);
             currentProcessedMins[ext] = callData[ext].mins;
         });
 
         const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
         const exts = Object.keys(callData);
-        if(exts.length === 0) return;
+        if(exts.length === 0) {
+            alert("فشل تحليل البيانات، يرجى التأكد من أن صيغة النص المنسوخ صحيحة.");
+            return;
+        }
 
         const calculatedAvg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
         document.getElementById('avgValue').innerText = calculatedAvg.toFixed(1);
@@ -417,7 +432,7 @@
         });
         
         if (tbody.children.length === 0) {
-            alert("لم يتم العثور على أي تحويلات مسجلة بقاعدة البيانات الحالية.");
+            alert("لم يتم العثور على أي تحويلات مطابقة للموظفين المسجلين بجوجل شيت.");
             return;
         }
 
@@ -550,6 +565,7 @@
         const data = monthlyData[mKey] || {};
         
         const header = document.getElementById('monthlyHeader');
+        if (!header) return;
         while(header.children.length > 4) header.removeChild(header.children[2]);
         
         for(let i = activeStartDay; i <= activeEndDay; i++) { 
@@ -675,6 +691,7 @@
 
     function renderSupervisorSection(analyticsData) {
         const tbody = document.querySelector('#supervisorTable tbody');
+        if(!tbody) return;
         tbody.innerHTML = '';
         
         let supLabels = [];
