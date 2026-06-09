@@ -24,13 +24,9 @@
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
-        body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 100px; color: var(--text); transition: 0.3s; }
+        body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 20px; color: var(--text); transition: 0.3s; }
         
-        .header-top { 
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;
-            position: fixed; top: 0; left: 0; right: 0; z-index: 1050; background-color: var(--bg); padding: 15px 25px;
-            border-bottom: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: background-color 0.3s, border-color 0.3s;
-        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
         .custom-tabs { display: flex; justify-content: center; gap: 10px; }
         .tab-btn { 
             padding: 12px 25px; border: none; background: var(--card-bg); color: var(--text); 
@@ -84,9 +80,11 @@
         .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
+        .btn-excel { background: #3498db; }
         
         .left-control-panel { display: flex; flex-direction: column; gap: 20px; }
         
+        /* 🚨 تم إزالة الارتفاع الإجباري h-100 لتفادي المساحة البيضاء الزائدة المتداخلة بالصورة */
         .separator-border-right {
             border-right: 2px dashed var(--border);
             padding-right: calc(var(--bs-gutter-x) * .5);
@@ -129,15 +127,15 @@
 </head>
 <body>
 
-<div class="header-top">
-    <div class="custom-tabs">
-        <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
-        <button class="tab-btn" onclick="showPage('monthly-page', this)">📅 الأداء الشهري</button>
-    </div>
-    <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
-</div>
-
 <div class="container-fluid px-4">
+    <div class="header-top">
+        <div class="custom-tabs">
+            <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
+            <button class="tab-btn" onclick="showPage('monthly-page', this)">📅 الأداء الشهري</button>
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
+    </div>
+
     <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
@@ -150,9 +148,23 @@
         </div>
 
         <div id="results-section" style="display:none;">
+            <div class="text-center mb-3">
+                <div class="transfer-box shadow-sm">
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
+                    <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
+                    <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
+                        🚀 ترحيل للتقرير وجوجل شيت
+                    </button>
+                </div>
+                <br>
+                <button class="btn-action btn-excel" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
+                <div id="copyStatus" class="copy-status"></div>
+            </div>
+            
+            <!-- ⚡ التوزيع الشبكي السيمتري المحسن لإنهاء الفراغ الأبيض رأسياً -->
             <div class="row g-4 align-items-start mt-1">
                 
-                <!-- الطرف الأيمن: جدول الأداء اليومي الفعلي ومربع المتوسط -->
+                <!-- الطرف الأيمن: جدول الأداء اليومي الفعلي ومربع المتوسط (ينتهي آلياً بانتهاء الصفوف) -->
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
@@ -186,27 +198,30 @@
                         <!-- كارت التحكم في ترحيل التاريخ المباشر لجوجل شيت -->
                         <div class="transfer-side-box card shadow-sm mb-0">
                             <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
-                            <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
-                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
+                            <input type="date" id="transferDateSide" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;" onchange="syncDates(this.value)">
+                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
                                 🚀 ترحيل للتقرير وجوجل شيت
                             </button>
                         </div>
                         
-                        <!-- كارت مجمع لأعلى 5 موظفين أداءً اليوم -->
+                        <!-- كارت مجمع لأعلى 3 موظفين أداءً اليوم -->
                         <div class="kpi-business-card kpi-card-success shadow-sm" id="liveTopCard">
-                            <div class="kpi-title">🏆 أعلى 5 موظفين أداءً اليوم</div>
-                            <div id="top5EmployeesContainer" class="d-flex flex-column gap-2">
+                            <div class="kpi-title">🏆 أعلى 3 موظفين أداءً اليوم</div>
+                            <div id="top3EmployeesContainer" class="d-flex flex-column gap-2">
                                 <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
                         </div>
 
-                        <!-- كارت مجمع لأقل 5 موظفين أداءً اليوم -->
+                        <!-- كارت مجمع لأقل 3 موظفين أداءً اليوم -->
                         <div class="kpi-business-card kpi-card-danger shadow-sm" id="liveLowCard">
-                            <div class="kpi-title">⚠️ أقل 5 موظفين أداءً اليوم</div>
-                            <div id="low5EmployeesContainer" class="d-flex flex-column gap-2">
+                            <div class="kpi-title">⚠️ أقل 3 موظفين أداءً اليوم</div>
+                            <div id="low3EmployeesContainer" class="d-flex flex-column gap-2">
                                 <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
                         </div>
+
+                        <button class="btn-action btn-excel w-100 py-2 fs-5 shadow-sm m-0" style="border-radius: 10px;" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
+                        <div id="copyStatus" class="copy-status"></div>
                     </div>
                 </div>
 
@@ -217,7 +232,7 @@
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لتحليل اليوم</h5>
-                        <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="downloadDailyChartOnly()">📸 صورة الشارت + الكروت بالأسفل مدمجة</button>
+                        <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم + الكروت المدمجة</button>
                     </div>
                     <div id="dailyChartCaptureArea" class="shadow-sm card">
                         <div class="chart-box-card m-0" id="actualChartContainerBox">
@@ -324,8 +339,11 @@
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
-    // تفعيل التوقيت التلقائي بشكل فوري ومباشر
-    document.getElementById('transferDate').valueAsDate = new Date();[cite: 1]
+    // مزامنة التواريخ بين الصندوقين لمنع التضارب
+    function syncDates(val) {
+        document.getElementById('transferDate').value = val;
+    }
+    document.getElementById('transferDateSide').value = document.getElementById('transferDate').value;
 
     let employees = [];
     let monthlyData = {};
@@ -465,26 +483,26 @@
         sortedArray.sort((a, b) => b.mins - a.mins);
         
         if(sortedArray.length > 0) {
-            const top5Container = document.getElementById('top5EmployeesContainer');
-            const low5Container = document.getElementById('low5EmployeesContainer');
+            const top3Container = document.getElementById('top3EmployeesContainer');
+            const low3Container = document.getElementById('low3EmployeesContainer');
             
-            top5Container.innerHTML = "";
-            low5Container.innerHTML = "";
+            top3Container.innerHTML = "";
+            low3Container.innerHTML = "";
             
-            const topMedals = ["🥇", "🥈", "🥉", "🏅", "🏅"];
-            for(let i=0; i<Math.min(5, sortedArray.length); i++) {
+            const topMedals = ["🥇", "🥈", "🥉"];
+            for(let i=0; i<Math.min(3, sortedArray.length); i++) {
                 const item = sortedArray[i];
-                top5Container.innerHTML += `
+                top3Container.innerHTML += `
                     <div class="kpi-list-item">
-                        <span class="kpi-name-span"><span>${topMedals[i] || "🏅"}</span> ${item.name}</span>
+                        <span class="kpi-name-span"><span>${topMedals[i]}</span> ${item.name}</span>
                         <span class="kpi-sub-badge text-success" style="background: rgba(16,185,129,0.12);">${item.mins} دقيقة</span>
                     </div>`;
             }
             
             let reverseArray = [...sortedArray].reverse();
-            for(let i=0; i<Math.min(5, reverseArray.length); i++) {
+            for(let i=0; i<Math.min(3, reverseArray.length); i++) {
                 const item = reverseArray[i];
-                low5Container.innerHTML += `
+                low3Container.innerHTML += `
                     <div class="kpi-list-item">
                         <span class="kpi-name-span"><span>🔻</span> ${item.name}</span>
                         <span class="kpi-sub-badge text-danger" style="background: rgba(239,68,68,0.12);">${item.mins} دقيقة</span>
@@ -928,11 +946,13 @@
         } catch (err) { alert("حدث خطأ في استخراج صورة الجدول"); }
     }
 
-    // 📸 الدالة المتطورة المحدثة والمثالية لالتقاط الشارت في الأعلى والكارتين (أعلى 5 وأقل 5) متجاورين بشكل متناسق بالأسفل في صورة واحدة!
+    // 📸 الدالة المتطورة والمحدثة لدمج الشارت اليومي مع كروت الـ KPI الجانبية تلقائياً في صورة واحدة فخمة ومثالية للجروبات!
     async function downloadDailyChartOnly() {
+        const originalChartContainer = document.getElementById('actualChartContainerBox');
         const topCard = document.getElementById('liveTopCard');
         const lowCard = document.getElementById('liveLowCard');
         
+        // 1. إنشاء حاوية مؤقتة مخفية في الصفحة ومصممة بأسلوب البيزنس الشبكي المتجاور
         const tempWrapper = document.createElement('div');
         tempWrapper.style.position = 'absolute';
         tempWrapper.style.top = '-9999px';
@@ -945,70 +965,73 @@
         tempWrapper.style.direction = 'rtl';
         tempWrapper.style.borderRadius = '16px';
         
+        // عنوان الصورة المدمجة فخم
         tempWrapper.innerHTML = `<h3 style="text-align:center; margin-bottom: 25px; font-weight: 900; color: #6366f1;">📈 ملخص الرسم البياني ومؤشرات الأداء اليومية</h3>`;
         
-        // 1. الشارت في الأعلى عريض بالكامل
-        const chartRow = document.createElement('div');
-        chartRow.style.width = '100%';
-        chartRow.style.height = '400px';
-        chartRow.style.border = '2px solid var(--border)';
-        chartRow.style.borderRadius = '14px';
-        chartRow.style.padding = '15px';
-        chartRow.style.marginBottom = '25px';
-        chartRow.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff';
+        // صف مرن يتسع للشارت العريض والكروت الجانبية المستقلة مع مسافات تنفس مريحة
+        const flexRow = document.createElement('div');
+        flexRow.style.display = 'flex';
+        flexRow.style.gap = '25px';
+        flexRow.style.alignItems = 'center';
         
+        // الجناح الأيمن المدمج: حاوية الشارت الكبيرة (60% من العرض)
+        const chartCol = document.createElement('div');
+        chartCol.style.flex = '0 0 62%';
+        chartCol.style.height = '400px';
+        chartCol.style.border = '2px solid var(--border)';
+        chartCol.style.borderRadius = '14px';
+        chartCol.style.padding = '15px';
+        chartCol.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff';
+        
+        // إنشاء كانفاس جديد مؤقت لنسخ وحقن أبعاد الشارت الحالي بدقة
         const tempCanvas = document.createElement('canvas');
-        chartRow.appendChild(tempCanvas);
-        tempWrapper.appendChild(chartRow);
-
-        // 2. الكارتين في الأسفل متجاورين جنباً إلى جنب (أفقيّاً بنسبة 50% لكل كارت)
-        const cardsFlexRow = document.createElement('div');
-        cardsFlexRow.style.display = 'flex';
-        cardsFlexRow.style.gap = '20px';
-        cardsFlexRow.style.width = '100%';
+        chartCol.appendChild(tempCanvas);
         
-        const rightCardCol = document.createElement('div'); rightCardCol.style.flex = '1';
-        const leftCardCol = document.createElement('div'); leftCardCol.style.flex = '1';
+        // الجناح الأيسر المدمج: حاوية الكروت متراصة رأسياً (38% من العرض)
+        const cardsCol = document.createElement('div');
+        cardsCol.style.flex = '0 0 35%';
+        cardsCol.style.display = 'flex';
+        cardsCol.style.flexDirection = 'column';
+        cardsCol.style.gap = '20px';
         
+        // استنساخ كروت التوب واللو الفعليين بدون المساس بأماكنهم على شاشة المدير
         const clonedTop = topCard.cloneNode(true);
         const clonedLow = lowCard.cloneNode(true);
         clonedTop.style.width = '100%';
         clonedLow.style.width = '100%';
+        cardsCol.appendChild(clonedTop);
+        cardsCol.appendChild(clonedLow);
         
-        rightCardCol.appendChild(clonedTop);
-        leftCardCol.appendChild(clonedLow);
-        cardsFlexRow.appendChild(rightCardCol);
-        cardsFlexRow.appendChild(leftCardCol);
-        tempWrapper.appendChild(cardsFlexRow);
-
+        flexRow.appendChild(chartCol);
+        flexRow.appendChild(cardsCol);
+        tempWrapper.appendChild(flexRow);
         document.body.appendChild(tempWrapper);
         
-        const currentTextColor = getChartTextColor();
-        const currentGridColor = getGridColor();
-        
+        // إعادة رسم جرافيك الـ Chart داخل الكانفاس الجديد بنفس إعدادات الألوان النشطة بالمتصفح
         const tempChart = new Chart(tempCanvas.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: dailyChartInstance.data.labels,
-                datasets: JSON.parse(JSON.stringify(dailyChartInstance.data.datasets))
+                datasets: JSON.parse(JSON.stringify(dailyChartInstance.data.datasets)) // نسخ عميق للبيانات والتلوين
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
+                    legend: { labels: { color: getChartTextColor(), font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: {
-                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 11 }, color: currentTextColor,
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 11 }, color: getChartTextColor(),
                         formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
                 scales: {
-                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: currentGridColor } },
-                    y: { beginAtZero: true, ticks: { color: currentTextColor }, grid: { color: currentGridColor } }
+                    x: { ticks: { color: getChartTextColor(), font: { family: 'Cairo', weight: 'bold' } }, grid: { color: getGridColor() } },
+                    y: { beginAtZero: true, ticks: { color: getChartTextColor() }, grid: { color: getGridColor() } }
                 }
             }
         });
         
+        // تأخير زمني ميكروسكوبي يضمن للمحرك اكتمال رسم الخطوط والملصقات بدقة قبل التقاط الشاشة
         setTimeout(async () => {
             try {
                 const canvasImage = await html2canvas(tempWrapper, { scale: 2, backgroundColor: null });
@@ -1017,8 +1040,9 @@
                 link.href = canvasImage.toDataURL("image/png");
                 link.click();
             } catch (err) {
-                alert("حدث خطأ أثناء استخراج الصورة المدمجة الكلية.");
+                alert("حدث خطأ أثناء استخراج الصورة المدمجة.");
             } finally {
+                // تدمير الكائنات المؤقتة وحذف الحاوية تماماً من الخلفية بعد التحميل للحفاظ على خفة وسرعة الموقع
                 tempChart.destroy();
                 document.body.removeChild(tempWrapper);
             }
@@ -1060,6 +1084,12 @@
             link.href = canvas.toDataURL("image/png");
             link.click();
         } catch (err) { alert("حدث خطأ أثناء تصوير قسم المشرفين."); }
+    }
+
+    function copyTableAsExcel(tId) {
+        const rows = Array.from(document.querySelectorAll(`#${tId} tr`));
+        let text = rows.map(r => Array.from(r.children).map(c => c.innerText).join('\t')).join('\n');
+        navigator.clipboard.writeText(text); showStatus("تم نسخ الجدول للإكسيل! 📋");
     }
 
     function showStatus(msg) {
