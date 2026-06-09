@@ -15,12 +15,12 @@
         :root { 
             --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #d97706; --accent: #6366f1;
             --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #cbd5e1;
-            --vacation-bg: #f1f5f9; /* لون رمادي فاتح للإجازات */
+            --vacation-bg: #f1f5f9; 
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         }
         [data-theme="dark"] {
             --bg: #0b0f19; --card-bg: #111827; --text: #f9fafb; --border: #374151; --primary: #3b82f6;
-            --vacation-bg: #1e293b; /* لون رمادي متناسق للوضع المظلم */
+            --vacation-bg: #1e293b; 
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
@@ -42,13 +42,19 @@
         .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 25px; }
         textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 120px; width: 100%; font-size: 1rem; }
 
-        #tableCaptureArea, #justTableCaptureArea, #justChartCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
+        #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
         
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; table-layout: auto !important; }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
         .pro-table th:hover, .monthly-table th:hover { opacity: 0.9; background-color: var(--accent); }
         .pro-table td, .monthly-table td { padding: 14px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
+
+        /* 📊 تحسين وتصغير حجم الخلايا في التقرير اليومي لمنع السكرول وضغط الفراغات */
+        #summaryTable th, #summaryTable td {
+            padding: 8px 4px !important;
+            font-size: 0.95rem !important;
+        }
 
         .monthly-table th, .monthly-table td { padding: 8px 4px !important; font-size: 0.85rem !important; }
 
@@ -65,7 +71,6 @@
         .below-avg { color: var(--danger) !important; font-weight: 900; }
         .req-col { color: #b45309 !important; background: rgba(245, 158, 11, 0.05); font-weight: 900; }
         
-        /* تلوين خلايا الإجازات (التي تحتوي على شرطة) باللون الرمادي الفاتح */
         .vacation-cell { background-color: var(--vacation-bg) !important; color: #94a3b8 !important; font-weight: 400 !important; }
 
         .chart-box-card {
@@ -96,7 +101,6 @@
 
         .section-title-business { font-weight: 900; color: var(--accent); border-right: 5px solid var(--accent); padding-right: 15px; margin: 35px 0 20px 0; }
         
-        /* تصفيف الخلايا القابلة للتعديل يدوياً لإعطاء تلميح للمستخدم */
         [contenteditable="true"]:focus { background: rgba(99, 102, 241, 0.1) !important; outline: 2px solid var(--accent); border-radius: 4px; }
     </style>
 </head>
@@ -125,7 +129,7 @@
                 <div class="transfer-box shadow-sm">
                     <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
-                    <label class="fw-bold text-danger d-block mb-2" id="liveTargetNotice"></label>
+                    <!-- 🚨 تم إزالة جملة التنبيه الحمراء تماماً من هنا بناءً على طلبك -->
                     <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
                         🚀 ترحيل للتقرير وجوجل شيت
                     </button>
@@ -137,7 +141,7 @@
             </div>
             
             <div id="tableCaptureArea" class="shadow-sm card">
-                <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.08); font-size:1.2rem;">
+                <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.08); font-size:1.1rem; padding: 8px;">
                     📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات.
                 </div>
                 <table class="pro-table" id="summaryTable">
@@ -350,36 +354,49 @@
         });
 
         const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
-        const exts = Object.keys(callData).sort();
+        const exts = Object.keys(callData);
         if(exts.length === 0) return;
 
         const calculatedAvg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
         document.getElementById('avgValue').innerText = calculatedAvg.toFixed(1);
         
-        let chartLabels = [];
-        let chartData = [];
+        // تحضير مصفوفة فرز البيانات لترتيبها تلقائياً من الأعلى لـ الأقل
+        let sortedArray = [];
 
         exts.forEach(ext => {
             const info = callData[ext];
             const emp = employees.find(e => String(e.ext).trim() === String(ext).trim());
             
-            // 🚨 تعديل استراتيجي: استثناء أي موظف غير مسجل في الشيت من الظهور في التقرير اليومي
             if (!emp) return; 
             
-            const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
-            const individualTarget = emp.target || 180;
-            const remainingForToday = (individualTarget - info.mins) > 0 ? (individualTarget - info.mins) : '✅';
+            sortedArray.push({
+                name: emp.name,
+                ext: ext,
+                mins: info.mins,
+                calls: info.calls,
+                target: emp.target || 180,
+                cls: info.mins >= calculatedAvg ? 'above-avg' : 'below-avg'
+            });
+        });
+        
+        // 🚨 إجراء السورت التلقائي من الأعلى للأقل بناءً على عدد الدقائق
+        sortedArray.sort((a, b) => b.mins - a.mins);
+        
+        let chartLabels = [];
+        let chartData = [];
 
-            chartLabels.push(emp.name);
-            chartData.push(info.mins);
+        sortedArray.forEach(item => {
+            chartLabels.push(item.name);
+            chartData.push(item.mins);
 
-            // إتاحة التعديل اليدوي المباشر للتارجت والمتبقي بمرونة كاملة عبر الكود
+            const remainingForToday = (item.target - item.mins) > 0 ? (item.target - item.mins) : '✅';
+
             tbody.innerHTML += `<tr>
-                <td class="${cls}">${emp.name}</td>
-                <td>${ext}</td>
-                <td class="${cls}">${info.mins}</td>
-                <td style="color:var(--accent)">${info.calls}</td>
-                <td contenteditable="true" onblur="recalculateRowMins(this, ${info.mins})">${individualTarget}</td>
+                <td class="${item.cls}">${item.name}</td>
+                <td>${item.ext}</td>
+                <td class="${item.cls}">${item.mins}</td>
+                <td style="color:var(--accent)">${item.calls}</td>
+                <td contenteditable="true" onblur="recalculateRowMins(this, ${item.mins})">${item.target}</td>
                 <td contenteditable="true" class="req-col">${remainingForToday}</td>
             </tr>`;
         });
@@ -390,11 +407,9 @@
         }
 
         document.getElementById('results-section').style.display = 'block';
-        document.getElementById('liveTargetNotice').innerText = "⚠️ ترحيل الأداء سيقوم بتحديث تارجت اليوم التالي تلقائياً في الشيت بناءً على العجز المتراكم الحالي.";
         buildDailyChart(chartLabels, chartData, calculatedAvg);
     }
 
-    // دالة مرنة مخصصة لإعادة الحساب المحلي الفوري عند تعديل خلايا اليومي يدوياً
     function recalculateRowMins(cellElement, actualMins) {
         let newTarget = parseInt(cellElement.innerText.trim());
         if (isNaN(newTarget) || newTarget < 0) { alert("يرجى إدخال قيمة صحيحة"); return; }
@@ -436,8 +451,13 @@
                 plugins: {
                     legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
-                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 12 }, color: currentTextColor,
-                        formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', family: 'Cairo', size: 12 },
+                        color: currentTextColor,
+                        formatter: function(value, context) {
+                            return context.datasetIndex === 0 ? value : null;
+                        }
                     }
                 },
                 scales: { 
@@ -469,7 +489,9 @@
 
         try {
             await fetch(SCRIPT_URL, {
-                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "transferDay", monthSheet: monthName, day: day, data: currentProcessedMins })
             });
             showStatus(`تم ترحيل البيانات وتحديث قاعدة بيانات التارجت بنجاح! 🚀✅`);
@@ -558,7 +580,6 @@
                 
                 for(let i = activeStartDay; i <= activeEndDay; i++) { 
                     const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
-                    // إذا كانت الخلية فارغة (تحتوي على شرطة) يتم وسمها بكلاس الإجازة لكي تتلون بالرمادي الفاتح
                     const isVacation = (v === '-') ? 'class="vacation-cell"' : '';
                     row += `<td ${isVacation} contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 }
@@ -571,7 +592,6 @@
                 var reqMinsValue = cumulativeGap > 0 ? `+${cumulativeGap}` : "⭐ مكتمل";
 
                 row += `<td class="avg-col ${cls}">${employeeAverage}</td>`;
-                // السماح للمدير بتعديل القيمة الزيادة المطلوبة يدوياً مباشرة من الجدول بمرونة تامة
                 row += `<td contenteditable="true" class="req-col">${reqMinsValue}</td></tr>`;
                 tbody.innerHTML += row;
 
@@ -782,7 +802,7 @@
     async function downloadTableAsImage() {
         const area = document.getElementById('tableCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `تقرير_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
             link.href = canvas.toDataURL("image/png");
@@ -790,41 +810,27 @@
         } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
-    // 📸 زر مخصص لالتقاط صورة لجدول الموظفين فقط
-    async function downloadJustTableSection() {
+    async function downloadEmployeesSection() {
         const scrollContainer = document.querySelector('.monthly-scroll');
-        const area = document.getElementById('justTableCaptureArea');
+        const area = document.getElementById('employeesCaptureArea');
         const oldOverflow = scrollContainer.style.overflowX;
         scrollContainer.style.overflowX = 'visible'; 
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
-            link.download = `جدول_أداء_الموظفين_فقط.png`;
+            link.download = `أداء_الموظفين_الشهري.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch (err) { alert("حدث خطأ في تصوير الجدول."); } 
+        } catch (err) { alert("حدث خطأ أثناء تصوير قسم الموظفين."); } 
         finally { scrollContainer.style.overflowX = oldOverflow; }
     }
 
-    // 📸 زر مخصص لالتقاط صورة لشارت الموظفين فقط
-    async function downloadJustChartSection() {
-        const area = document.getElementById('justChartCaptureArea');
-        try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
-            const link = document.createElement('a');
-            link.download = `رسم_بياني_الموظفين_فقط.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-        } catch (err) { alert("حدث خطأ في تصوير الشارت."); }
-    }
-
-    // 📸 زر مخصص لالتقاط صورة لقسم المشرفين كاملاً (الجدول والشارت معاً)
     async function downloadSupervisorsSection() {
         const area = document.getElementById('supervisorsCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
-            link.download = `تحليل_وقسم_المشرفين_الكامل.png`;
+            link.download = `تحليل_أداء_المشرفين_الشهري.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         } catch (err) { alert("حدث خطأ أثناء تصوير قسم المشرفين."); }
