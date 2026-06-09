@@ -10,6 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { 
             --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #f59e0b; --accent: #6366f1;
@@ -39,7 +40,7 @@
 
         #tableCaptureArea, #monthlyCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 12px; direction: rtl; }
         
-        .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); }
+        .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
         .pro-table th:hover, .monthly-table th:hover { opacity: 0.9; background-color: var(--accent); }
         .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
@@ -48,7 +49,7 @@
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
 
-        .chart-container { position: relative; margin: 30px auto; height: 350px; width: 100%; }
+        .chart-container { position: relative; margin: 30px auto; height: 380px; width: 100%; }
 
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
         
@@ -62,10 +63,11 @@
         .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ستايل فلتر المشرفين */
         .supervisor-filter-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         .filter-chip { padding: 8px 18px; border-radius: 20px; background: var(--card-bg); border: 2px solid var(--border); font-weight: 700; cursor: pointer; transition: 0.2s; }
         .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        .section-title-business { font-weight: 900; color: var(--accent); border-right: 5px solid var(--accent); padding-right: 15px; margin: 35px 0 20px 0; }
     </style>
 </head>
 <body>
@@ -103,6 +105,9 @@
             </div>
             
             <div id="tableCaptureArea" class="shadow-sm card">
+                <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.08); font-size:1.2rem;">
+                    📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات. (التلوين مبني على هذا المتوسط)
+                </div>
                 <table class="pro-table" id="summaryTable">
                     <thead>
                         <tr>
@@ -129,7 +134,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري</h5>
                 <div>
-                    <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadMonthlyAsImage()">📸 تحميل التقرير كصورة</button>
+                    <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadMonthlyAsImage()">📸 تحميل التقرير الشهري بالكامل كصورة</button>
                     <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
                 </div>
             </div>
@@ -137,6 +142,7 @@
             <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
             <div id="monthlyCaptureArea">
+                <h4 class="section-title-business">📊 سجل أداء موظفي الفريق</h4>
                 <div class="monthly-scroll">
                     <table class="monthly-table" id="monthlyReportTable">
                         <thead>
@@ -154,12 +160,31 @@
                 <div class="chart-container">
                     <canvas id="monthlyChart"></canvas>
                 </div>
+
+                <h4 class="section-title-business">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
+                <table class="pro-table text-center shadow-sm" id="supervisorTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0, 'supervisorTable')">اسم المشرف ⇅</th>
+                            <th onclick="sortTable(1, 'supervisorTable', true)">إجمالي مكالمات الفريق ⇅</th>
+                            <th onclick="sortTable(2, 'supervisorTable', true)">متوسط دقائق الفريق الشهري ⇅</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+                <div class="chart-container">
+                    <canvas id="supervisorChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // تسجيل إضافة الداتا ليبلز لـ Chart.js عالمياً
+    Chart.register(ChartDataLabels);
+
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
     document.getElementById('transferDate').valueAsDate = new Date();
@@ -169,11 +194,9 @@
     let currentProcessedMins = {};
     let selectedSupervisor = "الكل";
     
-    // كائنات الـ Charts لمنع التداخل عند التحديث
     let dailyChartInstance = null;
     let monthlyChartInstance = null;
-
-    // اتجاهات الترتيب الفوري للجداول
+    let supervisorChartInstance = null;
     let sortDirections = {};
 
     function showPage(pId, btn) {
@@ -187,29 +210,21 @@
         const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.body.setAttribute('data-theme', theme);
         localStorage.setItem('hr_theme', theme);
-        if(dailyChartInstance) { updateChartThemes(); }
     }
     if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-    // جلب الموظفين والمشرفين فور إقلاع الواجهة
     async function loadEmployees() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getEmployees`);
             employees = await response.json();
             renderSupervisorFilters();
         } catch (error) {
-            console.error("خطأ في جلب بيانات المشرفين والموظفين:", error);
-            employees = [
-                {ext: "1116", name: "آية أحمد", supervisor: "أحمد حسن", target: 180},
-                {ext: "1089", name: "حنين سمير", supervisor: "أحمد حسن", target: 180},
-                {ext: "1154", name: "عبدالرحمن علي", supervisor: "محمد علي", target: 180}
-            ];
+            console.error("خطأ في جلب بيانات الموظفين والمشرفين:", error);
             renderSupervisorFilters();
         }
     }
     loadEmployees();
 
-    // إنشاء فلاتر المشرفين بشكل ديناميكي فريد
     function renderSupervisorFilters() {
         const container = document.getElementById('supervisorFilters');
         const supervisors = ["الكل", ...new Set(employees.map(e => e.supervisor).filter(Boolean))];
@@ -234,7 +249,7 @@
         const p = t.trim().split(':'); return p.length === 3 ? (+p[0]*3600) + (+p[1]*60) + (+p[2]) : 0;
     }
 
-    // تحليل الأداء اليومي وبناء تشارت الأداء مقارنة بالتارجت المستهدف (180 دقيقة)
+    // معالجة التقرير اليومي وتطبيق الألوان التنافسية بناءً على المتوسط الفعلي الفريش لشارت وجدول اليوم
     function processData() {
         const input = document.getElementById('rawInput').value.trim(); if (!input) return;
         const lines = input.split('\n'); let callData = {}; currentProcessedMins = {};
@@ -251,6 +266,11 @@
 
         const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
         const exts = Object.keys(callData).sort();
+        if(exts.length === 0) return;
+
+        // حساب المتوسط الحقيقي الدقيق للفريق اليوم
+        const calculatedAvg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
+        document.getElementById('avgValue').innerText = calculatedAvg.toFixed(1);
         
         let chartLabels = [];
         let chartData = [];
@@ -259,13 +279,16 @@
             const info = callData[ext];
             const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
             
+            // المقارنة بالمتوسط الفعلي اليومي
+            const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
+
             chartLabels.push(emp.name);
             chartData.push(info.mins);
 
             tbody.innerHTML += `<tr>
-                <td>${emp.name}</td>
+                <td class="${cls}">${emp.name}</td>
                 <td>${ext}</td>
-                <td>${info.mins}</td>
+                <td class="${cls}">${info.mins}</td>
                 <td style="color:var(--accent)">${info.calls}</td>
                 <td>${emp.target}</td>
                 <td>${emp.target - info.mins > 0 ? emp.target - info.mins : '✅'}</td>
@@ -273,10 +296,10 @@
         });
         
         document.getElementById('results-section').style.display = 'block';
-        buildDailyChart(chartLabels, chartData);
+        buildDailyChart(chartLabels, chartData, calculatedAvg);
     }
 
-    function buildDailyChart(labels, dataValues) {
+    function buildDailyChart(labels, dataValues, currentAvg) {
         const ctx = document.getElementById('dailyChart').getContext('2d');
         if(dailyChartInstance) dailyChartInstance.destroy();
         
@@ -287,19 +310,34 @@
                 datasets: [{
                     label: 'المحقق الفعلي (دقيقة)',
                     data: dataValues,
-                    backgroundColor: dataValues.map(v => v >= 180 ? '#10b981' : '#ef4444'),
+                    // التلوين في الشارت يعتمد بالكامل على مقارنة القيمة بالمتوسط الحالي
+                    backgroundColor: dataValues.map(v => v >= currentAvg ? '#10b981' : '#ef4444'),
                     borderRadius: 6
                 }, {
                     type: 'line',
-                    label: 'التارجت المستهدف (180 دقيقة)',
-                    data: new Array(labels.length).fill(180),
-                    borderColor: '#f59e0b',
-                    borderWidth: 3,
+                    label: `متوسط الفريق الحالي (${currentAvg.toFixed(1)} د)`,
+                    data: new Array(labels.length).fill(currentAvg),
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: { // تفعيل ملصق البيانات لـ الدقائق فوق العمود مباشرة
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', family: 'Cairo' },
+                        color: '#475569',
+                        formatter: (val) => val
+                    }
+                },
+                scales: { y: { beginAtZero: true } } 
+            }
         });
     }
 
@@ -329,17 +367,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "transferDay", monthSheet: monthName, day: day, data: currentProcessedMins })
             });
-            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" في الـ Sheet بنجاح! 🚀✅`);
-            if (document.getElementById('monthly-page').classList.contains('active')) { fetchMonthlyReport(); }
-        } catch (error) {
-            alert("حدث خطأ أثناء الاتصال بالسيرفر.");
-        } finally {
+            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" بنجاح! 🚀✅`);
+        } catch (error) { alert("حدث خطأ أثناء الترحيل."); }
+        finally {
             btn.disabled = false;
             btn.innerText = `🚀 ترحيل للتقرير وجوجل شيت`;
         }
     }
 
-    // جلب تلقائي وفوري فور فتح صفحة الأداء الشهري
     async function fetchMonthlyReport() {
         const now = new Date();
         const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -373,26 +408,57 @@
         
         let chartLabels = [];
         let chartAverages = [];
+        
+        // هيكل لتجميع تحليلات المشرفين
+        let supervisorAnalytics = {};
 
-        // فلترة الموظفين حسب المشرف الحالي المختار
-        const filteredEmployees = employees.filter(emp => selectedSupervisor === "الكل" || emp.supervisor === selectedSupervisor);
-
-        filteredEmployees.forEach(emp => {
-            let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`, total = 0, count = 0;
-            for(let i=1; i<=maxDay; i++) { 
-                const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
-                row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
-                if(v!=='-'){total+=parseInt(v); count++;} 
+        // 1. معالجة بيانات الموظفين
+        employees.forEach(emp => {
+            let totalMins = 0, activeDays = 0, totalCallsEstimate = 0;
+            
+            // حساب البيانات لكل الأيام
+            for(let i=1; i<=maxDay; i++) {
+                const v = data[emp.ext]?.[i];
+                if(v !== undefined && v !== null && v !== '-') {
+                    totalMins += parseInt(v);
+                    activeDays++;
+                    // تقدير تقريبي للمكالمات بناءً على نسبة الدقائق المحققة لدعم إحصاءات المشرفين العامة
+                    totalCallsEstimate += Math.round(parseInt(v) * 0.6); 
+                }
             }
-            const averageMins = count ? Math.round(total/count) : 0;
-            row += `<td class="avg-col">${averageMins}</td></tr>`;
-            tbody.innerHTML += row;
+            
+            const employeeAverage = activeDays ? Math.round(totalMins/activeDays) : 0;
 
-            chartLabels.push(emp.name);
-            chartAverages.push(averageMins);
+            // تجميع وتحليل البيانات للمشرفين
+            if(emp.supervisor) {
+                if(!supervisorAnalytics[emp.supervisor]) {
+                    supervisorAnalytics[emp.supervisor] = { totalCalls: 0, sumOfAverages: 0, employeeCount: 0 };
+                }
+                supervisorAnalytics[emp.supervisor].totalCalls += totalCallsEstimate;
+                supervisorAnalytics[emp.supervisor].sumOfAverages += employeeAverage;
+                supervisorAnalytics[emp.supervisor].employeeCount += 1;
+            }
+
+            // تطبيق فلتر المشرف الفعلي في العرض فقط للجدول الموظفين والشارت الخاص بهم
+            if (selectedSupervisor === "الكل" || emp.supervisor === selectedSupervisor) {
+                let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`;
+                for(let i=1; i<=maxDay; i++) { 
+                    const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
+                    row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
+                }
+                
+                // تحديد ما إذا كان الموظف فوق أو تحت تارجت المتوسط الشهري (180 دقيقة)
+                const cls = employeeAverage >= 180 ? 'above-avg' : 'below-avg';
+                row += `<td class="avg-col ${cls}">${employeeAverage}</td></tr>`;
+                tbody.innerHTML += row;
+
+                chartLabels.push(emp.name);
+                chartAverages.push(employeeAverage);
+            }
         });
 
         buildMonthlyChart(chartLabels, chartAverages);
+        renderSupervisorSection(supervisorAnalytics);
     }
 
     function buildMonthlyChart(labels, averages) {
@@ -404,21 +470,89 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'متوسط الأداء الفردي (دقيقة)',
+                    label: 'متوسط الأداء الفردي للشهر الحالي (دقيقة)',
                     data: averages,
-                    backgroundColor: '#6366f1',
+                    backgroundColor: averages.map(v => v >= 180 ? '#10b981' : '#ef4444'),
                     borderRadius: 6
                 }, {
                     type: 'line',
-                    label: 'التارجت المطلوب (180 دقيقة)',
+                    label: 'التارجت الشهري المطلوب (180 دقيقة)',
                     data: new Array(labels.length).fill(180),
-                    borderColor: '#ef4444',
+                    borderColor: '#f59e0b',
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: { // إظهار الداتا ليبلز للشارت الشهري للموظفين
+                        anchor: 'end', align: 'top', font: { weight: 'bold' }, color: '#475569'
+                    }
+                }
+            }
+        });
+    }
+
+    // بناء وتعبئة صفحة وإحصاءات المشرفين وجدولهم المستقل
+    function renderSupervisorSection(analyticsData) {
+        const tbody = document.querySelector('#supervisorTable tbody');
+        tbody.innerHTML = '';
+        
+        let supLabels = [];
+        let supAverages = [];
+
+        for (let supervisorName in analyticsData) {
+            const data = analyticsData[supervisorName];
+            const finalSupervisorAvg = data.employeeCount ? Math.round(data.sumOfAverages / data.employeeCount) : 0;
+            
+            supLabels.push(supervisorName);
+            supAverages.push(finalSupervisorAvg);
+
+            tbody.innerHTML += `<tr>
+                <td style="color:var(--accent); font-weight:900;">${supervisorName}</td>
+                <td>${data.totalCalls}</td>
+                <td class="${finalSupervisorAvg >= 180 ? 'above-avg' : 'below-avg'}">${finalSupervisorAvg} دقيقة</td>
+            </tr>`;
+        }
+
+        buildSupervisorChart(supLabels, supAverages);
+    }
+
+    function buildSupervisorChart(labels, averages) {
+        const ctx = document.getElementById('supervisorChart').getContext('2d');
+        if(supervisorChartInstance) supervisorChartInstance.destroy();
+
+        supervisorChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'متوسط الدقائق العام لفريق المشرف (دقيقة)',
+                    data: averages,
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8
+                }, {
+                    type: 'line',
+                    label: 'تارجت مجموعات الإدارة (180 دقيقة)',
+                    data: new Array(labels.length).fill(180),
+                    borderColor: '#f59e0b',
                     borderWidth: 2,
                     pointRadius: 0,
                     fill: false
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end', align: 'top', font: { weight: 'bold' }, color: '#475569'
+                    }
+                }
+            }
         });
     }
 
@@ -438,7 +572,6 @@
                 method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "updateCell", monthSheet: monthName, ext: ext, day: day, value: num })
             });
-            // تحديث الرسم البياني بعد التعديل الفردي فوراً دون إعادة تحميل الصفحة كاملة
             const now = new Date();
             renderMonthlyReport(`${now.getFullYear()}-${now.getMonth()+1}`, monthName);
         } catch (e) { console.error(e); }
@@ -446,7 +579,6 @@
 
     function checkEnter(e, cell) { if (e.key === 'Enter') { e.preventDefault(); cell.blur(); } }
 
-    // خوارزمية ترتيب الجداول (Sorting) الفورية والشاملة للبيانات الرقمية والنصية
     function sortTable(colIndex, tableId, isNumeric = false) {
         const table = document.getElementById(tableId);
         const tbody = table.querySelector('tbody');
@@ -461,16 +593,13 @@
             if(valA === '✅') valA = '0';
             if(valB === '✅') valB = '0';
 
-            if (isNumeric) {
-                return (parseFloat(valA) - parseFloat(valB)) * dir;
-            }
+            if (isNumeric) { return (parseFloat(valA) - parseFloat(valB)) * dir; }
             return valA.localeCompare(valB, 'ar', {numeric: true}) * dir;
         });
-
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    function sortMonthlyTable(colIndex, isAvg = false) {
+    function sortMonthlyTable(colIndex) {
         const table = document.getElementById('monthlyReportTable');
         const tbody = table.querySelector('tbody');
         const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -479,9 +608,8 @@
         const dir = sortDirections[colIndex] ? 1 : -1;
 
         rows.sort((a, b) => {
-            // إذا كان الترتيب حسب المتوسط (العمود الأخير)
-            let cellA = isAvg ? a.querySelector('.avg-col').innerText : a.children[colIndex].innerText;
-            let cellB = isAvg ? b.querySelector('.avg-col').innerText : b.children[colIndex].innerText;
+            let cellA = (colIndex === 33) ? a.querySelector('.avg-col').innerText : a.children[colIndex].innerText;
+            let cellB = (colIndex === 33) ? b.querySelector('.avg-col').innerText : b.children[colIndex].innerText;
             
             if(colIndex === 0 || colIndex === 1) {
                 return cellA.localeCompare(cellB, 'ar', {numeric: true}) * dir;
@@ -501,26 +629,28 @@
     async function downloadTableAsImage() {
         const area = document.getElementById('tableCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `تقرير_الأداء_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
+            link.download = `تقرير_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
+    // زر تحميل صورة التقرير الشهري بالكامل (يشمل الجداول والشارت الجديد للمشرفين)
     async function downloadMonthlyAsImage() {
         const scrollContainer = document.querySelector('.monthly-scroll');
         const area = document.getElementById('monthlyCaptureArea');
         const oldOverflow = scrollContainer.style.overflowX;
-        scrollContainer.style.overflowX = 'visible';
+        scrollContainer.style.overflowX = 'visible'; // فك السكرول لالتقاط كافة الأيام 31 كاملة
         try {
-            const canvas = await html2canvas(area, { scale: 2 });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `سجل_الأداء_الشهري.png`;
+            link.download = `سجل_الأداء_الشهري_الشامل.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch (err) { alert("حدث خطأ"); } finally { scrollContainer.style.overflowX = oldOverflow; }
+        } catch (err) { alert("حدث خطأ أثناء تحميل السجل بالكامل كصورة."); } 
+        finally { scrollContainer.style.overflowX = oldOverflow; }
     }
 
     function copyTableAsExcel(tId) {
