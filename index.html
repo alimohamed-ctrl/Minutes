@@ -37,14 +37,12 @@
         .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 20px; }
         textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 100px; width: 100%; }
 
-        /* منطقة تصوير الجدول الاحترافي بأسلوب البيزنس */
         #tableCaptureArea, #monthlyCaptureArea { padding: 30px; background: #ffffff; border-radius: 12px; direction: rtl; }
         #tableCaptureArea { width: 920px; margin: 0 auto; }
         #monthlyCaptureArea { background: #ffffff; padding: 20px; border-radius: 12px; }
         
         [data-theme="dark"] #tableCaptureArea, [data-theme="dark"] #monthlyCaptureArea { background: #1e293b; }
 
-        /* تصفيف شبكي رسمي فاخر وموحد للجداول */
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 900; text-align: center; font-size: 1.05rem; border: 1px solid var(--border); }
         .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); font-size: 1.1rem; }
@@ -56,7 +54,6 @@
         .avg-summary-box { margin-top: 20px; border-radius: 8px; background: #f1f5f9; border: 1px solid var(--border); padding: 15px; font-size: 1.1rem; font-weight: 900; text-align: center; color: var(--text); }
         [data-theme="dark"] .avg-summary-box { background: #334155; }
 
-        /* تصميم حاوية الجدول الشهري */
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
         .monthly-table { font-size: 0.9rem; }
         .monthly-table th, .monthly-table td { padding: 10px 8px; border: 1px solid var(--border); }
@@ -78,10 +75,9 @@
         
         .transfer-box { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--border); }
         [data-theme="dark"] .transfer-box { background: #334155; }
-        .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1rem; text-align: center; }
+        .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1.1rem; text-align: center; }
 
-        /* مؤشر التحميل */
-        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 10px; vertical-align: middle; }
+        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -100,14 +96,14 @@
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
             <div class="mt-3">
-                <button class="btn btn-main shadow" id="processBtn" onclick="processData()">تحليل أداء اليوم ⚡</button>
+                <button class="btn btn-main shadow" onclick="processData()">تحليل أداء اليوم ⚡</button>
             </div>
         </div>
 
         <div id="results-section" style="display:none;">
             <div class="text-center mb-3">
                 <div class="transfer-box shadow-sm">
-                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل لجوجل شيت والتقرير الشهري:</label>
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ التترحيل لجوجل شيت والتقرير:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
                     <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
                         🚀 ترحيل للتقرير وجوجل شيت
@@ -141,7 +137,7 @@
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري جاري التحميل...</h5>
+                <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري</h5>
                 <div>
                     <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadMonthlyAsImage()">📸 تحميل التقرير كصورة</button>
                     <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
@@ -165,12 +161,11 @@
 </div>
 
 <script>
-    // رابط الـ Web App الخاص بجوجل شيت المستلم منك
+    // ضع رابط الـ Web App الخاص بك هنا بعد التحديث
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
     document.getElementById('transferDate').valueAsDate = new Date();
 
-    // تبديل الصفحات وجلب البيانات فوراً عند فتح التقرير الشهري
     function showPage(pId, btn) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -185,20 +180,18 @@
     }
     if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-    // مصفوفات وسجلات فارغة تعتمد بالكامل على السيرفر (جوجل شيت) بدلاً من اللوكال ستورج
     let employees = [];
     let monthlyData = {};
     let currentProcessedMins = {};
 
-    // جلب الموظفين فور تحميل الصفحة من ورقة "إدارة الفريق"
+    // جلب الموظفين مباشرة من شيت "إدارة الفريق" عند فتح الموقع
     async function loadEmployees() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getEmployees`);
             employees = await response.json();
-            console.log("تم تحميل قائمة الفريق بنجاح", employees);
         } catch (error) {
-            console.error("خطأ في جلب بيانات الموظفين من الشيت:", error);
-            // حل احتياطي مؤقت لتفادي التوقف في حال لم يستجب السكريبت فوراً
+            console.error("خطأ في جلب بيانات الموظفين:", error);
+            // قائمة احتياطية في حال تعطل الاتصال
             employees = [
                 {ext: "1116", name: "آية أحمد", target: 180}, {ext: "1089", name: "حنين سمير", target: 180},
                 {ext: "1154", name: "عبدالرحمن علي", target: 180}, {ext: "1600", name: "محمد سيد", target: 180},
@@ -248,24 +241,32 @@
         document.getElementById('results-section').style.display = 'block';
     }
 
-    // ترحيل البيانات وحفظها فوراً في جوجل شيت في التبويب المناسب حسب الشهر المختار
+    // ترحيل البيانات المزدوج: إلى صفحة التقرير الشهري في الموقع + شيت جوجل في نفس اللحظة
     async function transferToMonthly() {
         const selectedDate = new Date(document.getElementById('transferDate').value);
         if (isNaN(selectedDate.getTime())) return alert("يرجى اختيار تاريخ صحيح");
         
         const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-        const monthName = arMonths[selectedDate.getMonth()]; // يجلب اسم الشهر مثل "يونيو"
+        const monthName = arMonths[selectedDate.getMonth()];
         const day = selectedDate.getDate();
+        const mKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()+1}`;
 
         const btn = document.getElementById('transferBtn');
         btn.disabled = true;
-        btn.innerHTML = `جاري الترحيل لجوجل شيت... <span class="loading-spinner"></span>`;
+        btn.innerHTML = `جاري الترحيل الفوري... <span class="loading-spinner"></span>`;
 
-        // إرسال البيانات لجوجل شيت عبر POST Request
+        // 1. التحديث المحلي الفوري لصفحة الأداء الشهري في واجهة الموقع
+        if(!monthlyData[mKey]) monthlyData[mKey] = {};
+        for(let ex in currentProcessedMins) { 
+            if(!monthlyData[mKey][ex]) monthlyData[mKey][ex] = {}; 
+            monthlyData[mKey][ex][day] = currentProcessedMins[ex]; 
+        }
+
+        // 2. إرسال طلب الترحيل المباشر لجوجل شيت
         try {
-            const response = await fetch(SCRIPT_URL, {
+            await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // لتفادي مشاكل الـ CORS في المتصفح أثناء الإرسال الخارجي
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: "transferDay",
@@ -274,40 +275,30 @@
                     data: currentProcessedMins
                 })
             });
-
-            // تحديث محلي احتياطي لعرضه داخل الموقع مباشرة
-            const mKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()+1}`;
-            if(!monthlyData[mKey]) monthlyData[mKey] = {};
-            for(let ex in currentProcessedMins) { 
-                if(!monthlyData[mKey][ex]) monthlyData[mKey][ex] = {}; 
-                monthlyData[mKey][ex][day] = currentProcessedMins[ex]; 
-            }
-
-            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" يوم ${day} في جوجل شيت بنجاح! 🚀✅`);
+            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" (يوم ${day}) في جوجل شيت والتقرير الشهري بنجاح! 🚀✅`);
         } catch (error) {
-            console.error("حدث خطأ أثناء الترحيل لشيت جوجل:", error);
-            alert("حدثت مشكلة اتصال بجوجل شيت، يرجى التأكد من إعدادات الـ Web App.");
+            console.error(error);
+            alert("حدث خطأ أثناء ترحيل البيانات لجوجل شيت.");
         } finally {
             btn.disabled = false;
             btn.innerText = `🚀 ترحيل للتقرير وجوجل شيت`;
         }
     }
 
-    // جلب البيانات الشهرية من جوجل شيت مباشرة
+    // جلب البيانات الشهرية من جوجل شيت وعرضها
     async function fetchMonthlyReport() {
         const now = new Date();
         const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
         const monthName = arMonths[now.getMonth()];
         const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
         
-        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName} (جاري تحديث البيانات من جوجل شيت...)`;
+        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName} (جاري المزامنة مع جوجل شيت...)`;
 
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getMonthly&monthSheet=${encodeURIComponent(monthName)}`);
-            const remoteData = await response.json();
-            monthlyData[mKey] = remoteData;
+            monthlyData[mKey] = await response.json();
         } catch (error) {
-            console.error("لا يمكن جلب البيانات الشهرية، سيتم التحميل من الذاكرة المحلية المؤقتة:", error);
+            console.error("تعذر جلب البيانات، سيتم العرض من الذاكرة المحلية:", error);
         }
 
         renderMonthlyReport(mKey, monthName);
@@ -316,7 +307,7 @@
     function renderMonthlyReport(mKey, monthName) {
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
-        let maxDay = 31; // الاعتماد على الـ 31 يوم للشهر بشكل قياسي ومفتوح
+        let maxDay = 31; 
 
         const header = document.getElementById('monthlyHeader');
         while(header.children.length > 3) header.removeChild(header.children[2]);
@@ -339,7 +330,7 @@
         });
     }
 
-    // تحديث خانه معينة داخل التقرير وإرسال التعديل فوراً لجوجل شيت
+    // عند تعديل خلية يدوياً في الموقع يتم تحديث شيت جوجل فوراً
     async function updateMonthlyDay(mKey, monthName, ext, day, cell) {
         let val = cell.innerText.trim();
         if (!monthlyData[mKey]) monthlyData[mKey] = {};
@@ -355,7 +346,6 @@
             monthlyData[mKey][ext][day] = num;
         }
 
-        // إرسال التحديث لخلية جوجل شيت المحددة بالخلفية
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -369,7 +359,7 @@
                     value: num
                 })
             });
-        } catch (e) { console.error("فشل تحديث الخلية في جوجل شيت", e); }
+        } catch (e) { console.error(e); }
         
         renderMonthlyReport(mKey, monthName);
     }
