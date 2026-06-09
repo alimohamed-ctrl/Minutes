@@ -82,23 +82,32 @@
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
         .btn-excel { background: #3498db; }
         
-        /* 👥 تصميم فخم ومتباعد لكروت التحكم والـ KPI الجانبية لراحة العين */
-        .left-control-panel { display: flex; flex-direction: column; gap: 20px; } /* مساحة فاضية مريحة */
+        /* 👥 لوحة التحكم الجانبية اليسرى المتناسقة مئة بالمئة برمجياً مع سيمترية الواجهة */
+        .left-control-panel { display: flex; flex-direction: column; gap: 20px; }
         
+        /* خط فصل رأسي واضح وعميق للفصل الاستراتيجي بين الجزأين */
+        .separator-border-right {
+            border-right: 2px dashed var(--border);
+            padding-right: calc(var(--bs-gutter-x) * .5);
+        }
+
         .transfer-side-box {
             background: rgba(99, 102, 241, 0.03); padding: 20px; border-radius: 16px; border: 2px solid var(--border); text-align: center;
         }
         
+        /* كروت المجموعات العيا والدنيا بتصميم مدمج ومنظم جداً للعين */
         .kpi-business-card {
-            border: 2px solid var(--border); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; background: var(--card-bg);
+            border: 2px solid var(--border); border-radius: 16px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; background: var(--card-bg);
         }
         .kpi-business-card::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 6px; }
         .kpi-card-success::before { background: var(--secondary); }
         .kpi-card-danger::before { background: var(--danger); }
         
-        .kpi-title { font-size: 0.9rem; font-weight: 700; color: #64748b; margin-bottom: 4px; }
-        .kpi-value { font-size: 1.25rem; font-weight: 900; color: var(--text); }
-        .kpi-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
+        .kpi-title { font-size: 0.95rem; font-weight: 900; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        
+        .kpi-list-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; font-weight: 700; color: var(--text); }
+        .kpi-name-span { display: flex; align-items: center; gap: 6px; }
+        .kpi-sub-badge { padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 900; }
         
         .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1.1rem; text-align: center; }
 
@@ -129,7 +138,6 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
-    <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -141,17 +149,15 @@
         </div>
 
         <div id="results-section" style="display:none;">
-            <!-- ⚡ التوزيع الشبكي الجديد (55% للجدول و 45% للكروت والمؤشرات) جنب لجنب -->
-            <div class="row g-4 align-items-start mt-2">
+            <div class="row g-4 align-items-stretch mt-1">
                 
-                <!-- الطرف الأيمن المدمج: الجدول الحاوي لبيانات اليوم (55% من العرض الكلي) -->
-                <div class="col-lg-7 col-md-12">
+                <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
                         <button class="btn btn-sm btn-warning fw-bold text-white px-3" onclick="downloadDailyTableOnly()">📸 صورة جدول اليوم فقط</button>
                     </div>
                     
-                    <div id="dailyTableCaptureArea" class="shadow-sm card p-3 mb-0">
+                    <div id="dailyTableCaptureArea" class="shadow-sm card p-3 mb-0 h-100">
                         <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.07); font-size:1rem; padding: 10px; border-radius: 10px;">
                             📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة.
                         </div>
@@ -171,12 +177,10 @@
                     </div>
                 </div>
 
-                <!-- الطرف الأيسر الاحترافي: كروت الـ KPI المتباعدة والمنظمة تحت بعضها (45% من العرض) -->
-                <div class="col-lg-5 col-md-12">
-                    <div class="left-control-panel">
+                <div class="col-lg-6 col-md-12 separator-border-right">
+                    <div class="left-control-panel h-100 justify-content-between">
                         
-                        <!-- 1. كارت اختيار التاريخ والترحيل -->
-                        <div class="transfer-side-box card shadow-sm">
+                        <div class="transfer-side-box card shadow-sm mb-0">
                             <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
                             <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
                             <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
@@ -184,25 +188,20 @@
                             </button>
                         </div>
                         
-                        <!-- 2. كارت أعلى موظف أداءً (KPI 1) -->
                         <div class="kpi-business-card kpi-card-success shadow-sm">
-                            <div>
-                                <div class="kpi-title">🏆 الموظف الأعلى أداءً اليوم</div>
-                                <div class="kpi-value" id="topEmpName">-</div>
+                            <div class="kpi-title">🏆 أعلى 3 موظفين أداءً اليوم</div>
+                            <div id="top3EmployeesContainer" class="d-flex flex-column gap-2">
+                                <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
-                            <div class="kpi-badge text-success fw-extrabold" style="background: rgba(16,185,129,0.15);" id="topEmpValue">0 دقيقة</div>
                         </div>
 
-                        <!-- 3. كارت أقل موظف أداءً (KPI 2) -->
                         <div class="kpi-business-card kpi-card-danger shadow-sm">
-                            <div>
-                                <div class="kpi-title">⚠️ الموظف الأقل أداءً اليوم</div>
-                                <div class="kpi-value" id="lowEmpName">-</div>
+                            <div class="kpi-title">⚠️ أقل 3 موظفين أداءً اليوم</div>
+                            <div id="low3EmployeesContainer" class="d-flex flex-column gap-2">
+                                <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
-                            <div class="kpi-badge text-danger fw-extrabold" style="background: rgba(239,68,68,0.15);" id="lowEmpValue">0 دقيقة</div>
                         </div>
 
-                        <!-- زر الإكسيل التنافسي الموضع بالأسفل -->
                         <button class="btn-action btn-excel w-100 py-2 fs-5 shadow-sm m-0" style="border-radius: 10px;" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
                         <div id="copyStatus" class="copy-status"></div>
                     </div>
@@ -210,7 +209,6 @@
 
             </div>
 
-            <!-- صف شارت التقرير اليومي بالأسفل عريض بالكامل -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
@@ -230,7 +228,6 @@
         </div>
     </div>
 
-    <!-- الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -275,7 +272,7 @@
 
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
                     <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لمتوسط الموظفين</h5>
-                    <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadJustChartSection()">📸 صورة الشارت فقط</button>
+                    <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadJustChartSection()">📸 صورة شارت الموظفين فقط</button>
                 </div>
 
                 <div id="justChartCaptureArea">
@@ -287,7 +284,6 @@
                 </div>
             </div>
 
-            <!-- الجزء الثاني: المشرفون -->
             <div id="supervisorsCaptureArea" class="mt-5">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                     <h4 class="section-title-business m-0">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
@@ -461,16 +457,35 @@
         
         sortedArray.sort((a, b) => b.mins - a.mins);
         
-        // ⚡ احتساب وحقن أعلى وأقل موظف أداء داخل كروت الـ KPI المضافة
+        // 📊 استخراج وحقن أعلى 3 وأقل 3 موظفين ديناميكياً داخل الكروت التناظرية الجديدة
         if(sortedArray.length > 0) {
-            const topEmp = sortedArray[0];
-            const lowEmp = sortedArray[sortedArray.length - 1];
+            const top3Container = document.getElementById('top3EmployeesContainer');
+            const low3Container = document.getElementById('low3EmployeesContainer');
             
-            document.getElementById('topEmpName').innerText = topEmp.name;
-            document.getElementById('topEmpValue').innerText = `${topEmp.mins} دقيقة`;
+            top3Container.innerHTML = "";
+            low3Container.innerHTML = "";
             
-            document.getElementById('lowEmpName').innerText = lowEmp.name;
-            document.getElementById('lowEmpValue').innerText = `${lowEmp.mins} دقيقة`;
+            const topMedals = ["🥇", "🥈", "🥉"];
+            // معالجة أعلى 3 موظفين أداءً
+            for(let i=0; i<Math.min(3, sortedArray.length); i++) {
+                const item = sortedArray[i];
+                top3Container.innerHTML += `
+                    <div class="kpi-list-item">
+                        <span class="kpi-name-span"><span>${topMedals[i]}</span> ${item.name}</span>
+                        <span class="kpi-sub-badge text-success" style="background: rgba(16,185,129,0.12);">${item.mins} دقيقة</span>
+                    </div>`;
+            }
+            
+            // معالجة أقل 3 موظفين أداءً (عكس المصفوفة المرتفعة)
+            let reverseArray = [...sortedArray].reverse();
+            for(let i=0; i<Math.min(3, reverseArray.length); i++) {
+                const item = reverseArray[i];
+                low3Container.innerHTML += `
+                    <div class="kpi-list-item">
+                        <span class="kpi-name-span"><span>🔻</span> ${item.name}</span>
+                        <span class="kpi-sub-badge text-danger" style="background: rgba(239,68,68,0.12);">${item.mins} دقيقة</span>
+                    </div>`;
+            }
         }
 
         let chartLabels = [];
@@ -537,7 +552,10 @@
                 plugins: {
                     legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
-                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 12 }, color: currentTextColor,
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold', family: 'Cairo', size: 12 },
+                        color: currentTextColor,
                         formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
@@ -754,7 +772,7 @@
             const data = analyticsData[supervisorName];
             const finalSupervisorAvg = data.employeeCount ? Math.round(data.sumOfAverages / data.employeeCount) : 0;
             
-            supLabels.push(supervisorName);
+            ssupLabels.push(supervisorName);
             supAverages.push(finalSupervisorAvg);
 
             tbody.innerHTML += `<tr>
