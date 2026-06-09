@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام متابعة الأداء الاحترافي - نسخة الشركات المتقدمة</title>
+    <link rel="icon" href="https://img.icons8.com/fluency/48/hourglass-sand-top.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -75,12 +76,13 @@
         .btn-img { background: #e67e22; } .btn-excel { background: #3498db; }
         .btn-action:hover, .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
         
-        .db-item { background: var(--card-bg); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
-        .edit-input { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px; font-weight: 700; text-align: center; }
-        
         .transfer-box { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--border); }
         [data-theme="dark"] .transfer-box { background: #334155; }
         .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1rem; text-align: center; }
+
+        /* مؤشر التحميل */
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 10px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -90,7 +92,6 @@
         <div class="custom-tabs">
             <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
             <button class="tab-btn" onclick="showPage('monthly-page', this)">📅 الأداء الشهري</button>
-            <button class="tab-btn" onclick="showPage('admin-page', this)">👥 إدارة الفريق</button>
         </div>
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
@@ -99,16 +100,18 @@
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
             <div class="mt-3">
-                <button class="btn btn-main shadow" onclick="processData()">تحليل أداء اليوم ⚡</button>
+                <button class="btn btn-main shadow" id="processBtn" onclick="processData()">تحليل أداء اليوم ⚡</button>
             </div>
         </div>
 
         <div id="results-section" style="display:none;">
             <div class="text-center mb-3">
                 <div class="transfer-box shadow-sm">
-                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل:</label>
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل لجوجل شيت والتقرير الشهري:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
-                    <button class="btn btn-success fw-bold px-4" style="background:var(--accent); border:none;" onclick="transferToMonthly()">🚀 ترحيل للتقرير الشهري</button>
+                    <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
+                        🚀 ترحيل للتقرير وجوجل شيت
+                    </button>
                 </div>
                 <br>
                 <button class="btn-action btn-img" onclick="downloadTableAsImage()">تحميل التقرير كصورة 📸</button>
@@ -138,11 +141,10 @@
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري</h5>
+                <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري جاري التحميل...</h5>
                 <div>
                     <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadMonthlyAsImage()">📸 تحميل التقرير كصورة</button>
                     <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="clearMonthlyData()">مسح البيانات</button>
                 </div>
             </div>
             
@@ -160,31 +162,20 @@
             </div>
         </div>
     </div>
-
-    <div id="admin-page" class="page-content">
-        <div class="row">
-            <div class="col-md-5 mb-3">
-                <div class="card p-4 shadow-sm">
-                    <h5 class="fw-bold mb-3 text-primary">إضافة/تعديل موظف</h5>
-                    <input type="text" id="newExt" class="form-control mb-2" placeholder="رقم التحويلة">
-                    <input type="text" id="newName" class="form-control mb-2" placeholder="الاسم الكامل">
-                    <input type="number" id="newTarget" class="form-control mb-3" value="180">
-                    <button class="btn btn-primary w-100 fw-bold" onclick="addEmployee()">حفظ في القاعدة</button>
-                </div>
-            </div>
-            <div class="col-md-7"><div class="card p-4 shadow-sm"><div id="employeeList"></div></div></div>
-        </div>
-    </div>
 </div>
 
 <script>
+    // رابط الـ Web App الخاص بجوجل شيت المستلم منك
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
+
     document.getElementById('transferDate').valueAsDate = new Date();
 
+    // تبديل الصفحات وجلب البيانات فوراً عند فتح التقرير الشهري
     function showPage(pId, btn) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(pId).classList.add('active'); btn.classList.add('active');
-        if(pId === 'monthly-page') renderMonthlyReport();
+        if(pId === 'monthly-page') fetchMonthlyReport();
     }
 
     function toggleTheme() {
@@ -194,31 +185,28 @@
     }
     if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-    let employees = JSON.parse(localStorage.getItem('hr_v8_final')) || [
-        {ext: "1116", name: "آية أحمد", target: 180}, {ext: "1089", name: "حنين سمير", target: 180},
-        {ext: "1154", name: "عبدالرحمن علي", target: 180}, {ext: "1600", name: "محمد سيد", target: 180},
-        {ext: "1612", name: "مريم طارق", target: 180}, {ext: "1609", name: "عمرو عبدالعظيم", target: 180}
-    ];
-    let monthlyData = JSON.parse(localStorage.getItem('hr_monthly_v9')) || {};
+    // مصفوفات وسجلات فارغة تعتمد بالكامل على السيرفر (جوجل شيت) بدلاً من اللوكال ستورج
+    let employees = [];
+    let monthlyData = {};
     let currentProcessedMins = {};
 
-    function renderEmployeeList() {
-        const listDiv = document.getElementById('employeeList'); listDiv.innerHTML = '';
-        employees.sort((a,b) => a.ext.localeCompare(b.ext, undefined, {numeric:true})).forEach((emp, index) => {
-            listDiv.innerHTML += `<div class="db-item shadow-sm">
-                <input type="text" class="edit-input" style="width:70px" value="${emp.ext}" onchange="updateEmp(${index}, 'ext', this.value)">
-                <input type="text" class="edit-input" style="width:150px" value="${emp.name}" onchange="updateEmp(${index}, 'name', this.value)">
-                <input type="number" class="edit-input" style="width:70px" value="${emp.target}" onchange="updateEmp(${index}, 'target', this.value)">
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee(${index})">حذف</button></div>`;
-        });
-        localStorage.setItem('hr_v8_final', JSON.stringify(employees));
+    // جلب الموظفين فور تحميل الصفحة من ورقة "إدارة الفريق"
+    async function loadEmployees() {
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getEmployees`);
+            employees = await response.json();
+            console.log("تم تحميل قائمة الفريق بنجاح", employees);
+        } catch (error) {
+            console.error("خطأ في جلب بيانات الموظفين من الشيت:", error);
+            // حل احتياطي مؤقت لتفادي التوقف في حال لم يستجب السكريبت فوراً
+            employees = [
+                {ext: "1116", name: "آية أحمد", target: 180}, {ext: "1089", name: "حنين سمير", target: 180},
+                {ext: "1154", name: "عبدالرحمن علي", target: 180}, {ext: "1600", name: "محمد سيد", target: 180},
+                {ext: "1612", name: "مريم طارق", target: 180}, {ext: "1609", name: "عمرو عبدالعظيم", target: 180}
+            ];
+        }
     }
-    function updateEmp(i, f, v) { employees[i][f] = f==='target' ? parseInt(v) : v; renderEmployeeList(); }
-    function addEmployee() { 
-        const e = document.getElementById('newExt').value, n = document.getElementById('newName').value, t = document.getElementById('newTarget').value;
-        if(e && n) { employees.push({ext:e, name:n, target:parseInt(t)}); renderEmployeeList(); }
-    }
-    function deleteEmployee(i) { if(confirm("حذف؟")) { employees.splice(i,1); renderEmployeeList(); } }
+    loadEmployees();
 
     function timeToSeconds(t) {
         if (!t || !t.includes(':')) return 0;
@@ -239,6 +227,7 @@
         });
         const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
         const exts = Object.keys(callData);
+        if(exts.length === 0) return;
         const avg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
         document.getElementById('avgValue').innerText = avg.toFixed(1);
 
@@ -247,7 +236,6 @@
             const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
             const cls = info.mins >= avg ? 'above-avg' : 'below-avg';
             
-            // تم تبديل ترتيب خانة الدقائق (المحقق) وخانة المكالمات برمجياً هنا لتتوافق مع الترويسة الجديدة
             tbody.innerHTML += `<tr>
                 <td>${ext}</td>
                 <td>${emp.name}</td>
@@ -260,33 +248,75 @@
         document.getElementById('results-section').style.display = 'block';
     }
 
-    function transferToMonthly() {
+    // ترحيل البيانات وحفظها فوراً في جوجل شيت في التبويب المناسب حسب الشهر المختار
+    async function transferToMonthly() {
         const selectedDate = new Date(document.getElementById('transferDate').value);
         if (isNaN(selectedDate.getTime())) return alert("يرجى اختيار تاريخ صحيح");
-        const mKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()+1}`;
-        const d = selectedDate.getDate();
-        if(!monthlyData[mKey]) monthlyData[mKey] = {};
-        for(let ex in currentProcessedMins) { 
-            if(!monthlyData[mKey][ex]) monthlyData[mKey][ex] = {}; 
-            monthlyData[mKey][ex][d] = currentProcessedMins[ex]; 
+        
+        const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        const monthName = arMonths[selectedDate.getMonth()]; // يجلب اسم الشهر مثل "يونيو"
+        const day = selectedDate.getDate();
+
+        const btn = document.getElementById('transferBtn');
+        btn.disabled = true;
+        btn.innerHTML = `جاري الترحيل لجوجل شيت... <span class="loading-spinner"></span>`;
+
+        // إرسال البيانات لجوجل شيت عبر POST Request
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // لتفادي مشاكل الـ CORS في المتصفح أثناء الإرسال الخارجي
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: "transferDay",
+                    monthSheet: monthName,
+                    day: day,
+                    data: currentProcessedMins
+                })
+            });
+
+            // تحديث محلي احتياطي لعرضه داخل الموقع مباشرة
+            const mKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()+1}`;
+            if(!monthlyData[mKey]) monthlyData[mKey] = {};
+            for(let ex in currentProcessedMins) { 
+                if(!monthlyData[mKey][ex]) monthlyData[mKey][ex] = {}; 
+                monthlyData[mKey][ex][day] = currentProcessedMins[ex]; 
+            }
+
+            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" يوم ${day} في جوجل شيت بنجاح! 🚀✅`);
+        } catch (error) {
+            console.error("حدث خطأ أثناء الترحيل لشيت جوجل:", error);
+            alert("حدثت مشكلة اتصال بجوجل شيت، يرجى التأكد من إعدادات الـ Web App.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = `🚀 ترحيل للتقرير وجوجل شيت`;
         }
-        localStorage.setItem('hr_monthly_v9', JSON.stringify(monthlyData));
-        showStatus(`تم ترحيل البيانات لتاريخ ${d}/${selectedDate.getMonth()+1} بنجاح! ✅`);
     }
 
-    function renderMonthlyReport() {
+    // جلب البيانات الشهرية من جوجل شيت مباشرة
+    async function fetchMonthlyReport() {
         const now = new Date();
+        const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        const monthName = arMonths[now.getMonth()];
         const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
-        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${mKey}`;
         
-        const data = monthlyData[mKey] || {};
-        let maxDay = 1;
-        for (let ext in data) {
-            for (let d in data[ext]) {
-                const dayNum = parseInt(d);
-                if (dayNum > maxDay) maxDay = dayNum;
-            }
+        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName} (جاري تحديث البيانات من جوجل شيت...)`;
+
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getMonthly&monthSheet=${encodeURIComponent(monthName)}`);
+            const remoteData = await response.json();
+            monthlyData[mKey] = remoteData;
+        } catch (error) {
+            console.error("لا يمكن جلب البيانات الشهرية، سيتم التحميل من الذاكرة المحلية المؤقتة:", error);
         }
+
+        renderMonthlyReport(mKey, monthName);
+    }
+
+    function renderMonthlyReport(mKey, monthName) {
+        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
+        const data = monthlyData[mKey] || {};
+        let maxDay = 31; // الاعتماد على الـ 31 يوم للشهر بشكل قياسي ومفتوح
 
         const header = document.getElementById('monthlyHeader');
         while(header.children.length > 3) header.removeChild(header.children[2]);
@@ -300,28 +330,48 @@
         employees.forEach(emp => {
             let row = `<tr><td>${emp.ext}</td><td>${emp.name}</td>`, total = 0, count = 0;
             for(let i=1; i<=maxDay; i++) { 
-                const v = data[emp.ext]?.[i] || '-'; 
-                row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
-                if(v!=='-'){total+=v; count++;} 
+                const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
+                row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
+                if(v!=='-'){total+=parseInt(v); count++;} 
             }
             row += `<td class="avg-col">${count?Math.round(total/count):0}</td></tr>`;
             tbody.innerHTML += row;
         });
     }
 
-    function updateMonthlyDay(mKey, ext, day, cell) {
+    // تحديث خانه معينة داخل التقرير وإرسال التعديل فوراً لجوجل شيت
+    async function updateMonthlyDay(mKey, monthName, ext, day, cell) {
         let val = cell.innerText.trim();
         if (!monthlyData[mKey]) monthlyData[mKey] = {};
         if (!monthlyData[mKey][ext]) monthlyData[mKey][ext] = {};
+        
+        let num = 0;
         if (val === '' || val === '-') {
             delete monthlyData[mKey][ext][day];
+            num = "";
         } else {
-            let num = parseInt(val);
-            if (isNaN(num) || num < 0) { alert("يرجى إدخال رقم صحيح وموجب"); renderMonthlyReport(); return; }
+            num = parseInt(val);
+            if (isNaN(num) || num < 0) { alert("يرجى إدخال رقم صحيح وموجب"); fetchMonthlyReport(); return; }
             monthlyData[mKey][ext][day] = num;
         }
-        localStorage.setItem('hr_monthly_v9', JSON.stringify(monthlyData));
-        renderMonthlyReport();
+
+        // إرسال التحديث لخلية جوجل شيت المحددة بالخلفية
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: "updateCell",
+                    monthSheet: monthName,
+                    ext: ext,
+                    day: day,
+                    value: num
+                })
+            });
+        } catch (e) { console.error("فشل تحديث الخلية في جوجل شيت", e); }
+        
+        renderMonthlyReport(mKey, monthName);
     }
 
     function checkEnter(e, cell) { if (e.key === 'Enter') { e.preventDefault(); cell.blur(); } }
@@ -376,23 +426,10 @@
         navigator.clipboard.writeText(text); showStatus("تم نسخ النص للإكسيل! 📋");
     }
 
-    function clearMonthlyData() {
-        const now = new Date();
-        const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
-        if(confirm(`هل أنت متأكد من مسح سجل شهر ${mKey} بالكامل؟`)) {
-            monthlyData[mKey] = {};
-            localStorage.setItem('hr_monthly_v9', JSON.stringify(monthlyData));
-            renderMonthlyReport();
-            showStatus("تم مسح بيانات الشهر بنجاح.");
-        }
-    }
-
     function showStatus(msg) {
         const s = document.getElementById('copyStatus'); s.innerText = msg; s.style.display = 'block';
         setTimeout(() => s.style.display = 'none', 4000);
     }
-    
-    renderEmployeeList();
 </script>
 </body>
 </html>
