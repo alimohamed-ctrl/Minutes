@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام متابعة الأداء الاحترافي - نسخة الشركات المتقدمة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { 
+            --primary: #1e293b; --secondary: #16a34a; --danger: #dc2626; --warning: #d97706; --accent: #6d28d9;
+            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #cbd5e1;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #475569; --primary: #3b82f6;
+        }
+
+        body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 20px; color: var(--text); transition: 0.3s; }
+        
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+        .custom-tabs { display: flex; justify-content: center; gap: 10px; }
+        .tab-btn { 
+            padding: 12px 25px; border: none; background: var(--card-bg); color: var(--text); 
+            font-weight: 700; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .tab-btn.active { background: var(--primary); color: #fff; }
+        
+        .theme-btn { background: var(--card-bg); color: var(--text); border: 2px solid var(--border); padding: 8px 15px; border-radius: 30px; font-weight: bold; cursor: pointer; }
+
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 20px; }
+        textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 100px; width: 100%; }
+
+        /* منطقة تصوير الجدول الاحترافي بأسلوب البيزنس */
+        #tableCaptureArea, #monthlyCaptureArea { padding: 30px; background: #ffffff; border-radius: 12px; direction: rtl; }
+        #tableCaptureArea { width: 920px; margin: 0 auto; }
+        #monthlyCaptureArea { background: #ffffff; padding: 20px; border-radius: 12px; }
+        
+        [data-theme="dark"] #tableCaptureArea, [data-theme="dark"] #monthlyCaptureArea { background: #1e293b; }
+
+        /* تصفيف شبكي رسمي فاخر وموحد للجداول */
+        .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); }
+        .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 900; text-align: center; font-size: 1.05rem; border: 1px solid var(--border); }
+        .pro-table td, .monthly-table td { padding: 14px 10px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); font-size: 1.1rem; }
+        .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.01); }
+
+        .above-avg { color: var(--secondary) !important; font-weight: 900; }
+        .below-avg { color: var(--danger) !important; font-weight: 900; }
+
+        .avg-summary-box { margin-top: 20px; border-radius: 8px; background: #f1f5f9; border: 1px solid var(--border); padding: 15px; font-size: 1.1rem; font-weight: 900; text-align: center; color: var(--text); }
+        [data-theme="dark"] .avg-summary-box { background: #334155; }
+
+        /* تصميم حاوية الجدول الشهري */
+        .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
+        .monthly-table { font-size: 0.9rem; }
+        .monthly-table th, .monthly-table td { padding: 10px 8px; border: 1px solid var(--border); }
+        
+        .monthly-table td[contenteditable="true"]:focus {
+            background: #e2e8f0 !important;
+            outline: 2px solid var(--primary);
+            color: #000 !important;
+        }
+
+        .day-header { color: #ffffff !important; font-weight: 900 !important; font-size: 1rem !important; background: var(--primary); }
+        .avg-col { background: #fef3c7; color: #b45309 !important; font-weight: 900; width: 80px; }
+        [data-theme="dark"] .avg-col { background: #78350f; color: #fef3c7 !important; }
+
+        .btn-main { background: var(--secondary); color: white; border-radius: 12px; padding: 12px 50px; font-weight: 900; border: none; }
+        .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
+        .btn-img { background: #e67e22; } .btn-excel { background: #3498db; }
+        .btn-action:hover, .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .db-item { background: var(--card-bg); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        .edit-input { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px; font-weight: 700; text-align: center; }
+        
+        .transfer-box { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--border); }
+        [data-theme="dark"] .transfer-box { background: #334155; }
+        .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid px-4">
+    <div class="header-top">
+        <div class="custom-tabs">
+            <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
+            <button class="tab-btn" onclick="showPage('monthly-page', this)">📅 الأداء الشهري</button>
+            <button class="tab-btn" onclick="showPage('admin-page', this)">👥 إدارة الفريق</button>
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
+    </div>
+
+    <div id="reports-page" class="page-content active">
+        <div class="card p-4 text-center shadow-sm">
+            <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
+            <div class="mt-3">
+                <button class="btn btn-main shadow" onclick="processData()">تحليل أداء اليوم ⚡</button>
+            </div>
+        </div>
+
+        <div id="results-section" style="display:none;">
+            <div class="text-center mb-3">
+                <div class="transfer-box shadow-sm">
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل:</label>
+                    <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
+                    <button class="btn btn-success fw-bold px-4" style="background:var(--accent); border:none;" onclick="transferToMonthly()">🚀 ترحيل للتقرير الشهري</button>
+                </div>
+                <br>
+                <button class="btn-action btn-img" onclick="downloadTableAsImage()">تحميل التقرير كصورة 📸</button>
+                <button class="btn-action btn-excel" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
+                <div id="copyStatus" class="copy-status"></div>
+            </div>
+            
+            <div id="tableCaptureArea" class="shadow-sm">
+                <table class="pro-table" id="summaryTable">
+                    <thead>
+                        <tr>
+                            <th>التحويلة</th>
+                            <th>الاسم</th>
+                            <th>عدد الدقائق</th> <th>عدد المكالمات</th> <th>تارجت الدقائق</th>
+                            <th>المتبقي</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="avg-summary-box" id="avgContainer">
+                    📈 متوسط أداء الفريق اليوم: <strong id="avgValue">0</strong> دقيقة مكالمات.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="monthly-page" class="page-content">
+        <div class="card p-4 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري</h5>
+                <div>
+                    <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadMonthlyAsImage()">📸 تحميل التقرير كصورة</button>
+                    <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="clearMonthlyData()">مسح البيانات</button>
+                </div>
+            </div>
+            
+            <div id="monthlyCaptureArea">
+                <div class="monthly-scroll">
+                    <table class="monthly-table" id="monthlyReportTable">
+                        <thead>
+                            <tr id="monthlyHeader">
+                                <th>التحويلة</th><th>الاسم</th><th id="daysPlaceholder"></th><th class="avg-col">المتوسط</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-page" class="page-content">
+        <div class="row">
+            <div class="col-md-5 mb-3">
+                <div class="card p-4 shadow-sm">
+                    <h5 class="fw-bold mb-3 text-primary">إضافة/تعديل موظف</h5>
+                    <input type="text" id="newExt" class="form-control mb-2" placeholder="رقم التحويلة">
+                    <input type="text" id="newName" class="form-control mb-2" placeholder="الاسم الكامل">
+                    <input type="number" id="newTarget" class="form-control mb-3" value="180">
+                    <button class="btn btn-primary w-100 fw-bold" onclick="addEmployee()">حفظ في القاعدة</button>
+                </div>
+            </div>
+            <div class="col-md-7"><div class="card p-4 shadow-sm"><div id="employeeList"></div></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('transferDate').valueAsDate = new Date();
+
+    function showPage(pId, btn) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(pId).classList.add('active'); btn.classList.add('active');
+        if(pId === 'monthly-page') renderMonthlyReport();
+    }
+
+    function toggleTheme() {
+        const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('hr_theme', theme);
+    }
+    if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+
+    let employees = JSON.parse(localStorage.getItem('hr_v8_final')) || [
+        {ext: "1116", name: "آية أحمد", target: 180}, {ext: "1089", name: "حنين سمير", target: 180},
+        {ext: "1154", name: "عبدالرحمن علي", target: 180}, {ext: "1600", name: "محمد سيد", target: 180},
+        {ext: "1612", name: "مريم طارق", target: 180}, {ext: "1609", name: "عمرو عبدالعظيم", target: 180}
+    ];
+    let monthlyData = JSON.parse(localStorage.getItem('hr_monthly_v9')) || {};
+    let currentProcessedMins = {};
+
+    function renderEmployeeList() {
+        const listDiv = document.getElementById('employeeList'); listDiv.innerHTML = '';
+        employees.sort((a,b) => a.ext.localeCompare(b.ext, undefined, {numeric:true})).forEach((emp, index) => {
+            listDiv.innerHTML += `<div class="db-item shadow-sm">
+                <input type="text" class="edit-input" style="width:70px" value="${emp.ext}" onchange="updateEmp(${index}, 'ext', this.value)">
+                <input type="text" class="edit-input" style="width:150px" value="${emp.name}" onchange="updateEmp(${index}, 'name', this.value)">
+                <input type="number" class="edit-input" style="width:70px" value="${emp.target}" onchange="updateEmp(${index}, 'target', this.value)">
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee(${index})">حذف</button></div>`;
+        });
+        localStorage.setItem('hr_v8_final', JSON.stringify(employees));
+    }
+    function updateEmp(i, f, v) { employees[i][f] = f==='target' ? parseInt(v) : v; renderEmployeeList(); }
+    function addEmployee() { 
+        const e = document.getElementById('newExt').value, n = document.getElementById('newName').value, t = document.getElementById('newTarget').value;
+        if(e && n) { employees.push({ext:e, name:n, target:parseInt(t)}); renderEmployeeList(); }
+    }
+    function deleteEmployee(i) { if(confirm("حذف؟")) { employees.splice(i,1); renderEmployeeList(); } }
+
+    function timeToSeconds(t) {
+        if (!t || !t.includes(':')) return 0;
+        const p = t.trim().split(':'); return p.length === 3 ? (+p[0]*3600) + (+p[1]*60) + (+p[2]) : 0;
+    }
+
+    function processData() {
+        const input = document.getElementById('rawInput').value.trim(); if (!input) return;
+        const lines = input.split('\n'); let callData = {}; currentProcessedMins = {};
+        lines.forEach(line => {
+            const cols = line.split(/\t|\s{2,}/); if (line.includes("Extension") || cols.length < 3) return;
+            const ext = cols[0].match(/\d+/)[0];
+            const times = cols.filter(c => c.includes(':') && c.split(':').length === 3);
+            const mins = Math.round((timeToSeconds(times[0] || "0:00:00") + timeToSeconds(times[1] || "0:00:00")) / 60);
+            if(!callData[ext]) callData[ext] = { mins: 0, calls: 0 };
+            callData[ext].mins += mins; callData[ext].calls += (parseInt(cols[1]) + parseInt(cols[2]));
+            currentProcessedMins[ext] = callData[ext].mins;
+        });
+        const tbody = document.querySelector('#summaryTable tbody'); tbody.innerHTML = '';
+        const exts = Object.keys(callData);
+        const avg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
+        document.getElementById('avgValue').innerText = avg.toFixed(1);
+
+        exts.sort().forEach(ext => {
+            const info = callData[ext];
+            const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
+            const cls = info.mins >= avg ? 'above-avg' : 'below-avg';
+            
+            // تم تبديل ترتيب خانة الدقائق (المحقق) وخانة المكالمات برمجياً هنا لتتوافق مع الترويسة الجديدة
+            tbody.innerHTML += `<tr>
+                <td>${ext}</td>
+                <td>${emp.name}</td>
+                <td class="${cls}">${info.mins}</td>
+                <td style="color:var(--primary)">${info.calls}</td>
+                <td>${emp.target}</td>
+                <td>${emp.target - info.mins > 0 ? emp.target - info.mins : '✅'}</td>
+            </tr>`;
+        });
+        document.getElementById('results-section').style.display = 'block';
+    }
+
+    function transferToMonthly() {
+        const selectedDate = new Date(document.getElementById('transferDate').value);
+        if (isNaN(selectedDate.getTime())) return alert("يرجى اختيار تاريخ صحيح");
+        const mKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()+1}`;
+        const d = selectedDate.getDate();
+        if(!monthlyData[mKey]) monthlyData[mKey] = {};
+        for(let ex in currentProcessedMins) { 
+            if(!monthlyData[mKey][ex]) monthlyData[mKey][ex] = {}; 
+            monthlyData[mKey][ex][d] = currentProcessedMins[ex]; 
+        }
+        localStorage.setItem('hr_monthly_v9', JSON.stringify(monthlyData));
+        showStatus(`تم ترحيل البيانات لتاريخ ${d}/${selectedDate.getMonth()+1} بنجاح! ✅`);
+    }
+
+    function renderMonthlyReport() {
+        const now = new Date();
+        const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+        document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${mKey}`;
+        
+        const data = monthlyData[mKey] || {};
+        let maxDay = 1;
+        for (let ext in data) {
+            for (let d in data[ext]) {
+                const dayNum = parseInt(d);
+                if (dayNum > maxDay) maxDay = dayNum;
+            }
+        }
+
+        const header = document.getElementById('monthlyHeader');
+        while(header.children.length > 3) header.removeChild(header.children[2]);
+        
+        for(let i=1; i<=maxDay; i++) { 
+            const th = document.createElement('th'); th.innerText = i; th.className = 'day-header';
+            header.insertBefore(th, header.lastElementChild); 
+        }
+        
+        const tbody = document.querySelector('#monthlyReportTable tbody'); tbody.innerHTML = '';
+        employees.forEach(emp => {
+            let row = `<tr><td>${emp.ext}</td><td>${emp.name}</td>`, total = 0, count = 0;
+            for(let i=1; i<=maxDay; i++) { 
+                const v = data[emp.ext]?.[i] || '-'; 
+                row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
+                if(v!=='-'){total+=v; count++;} 
+            }
+            row += `<td class="avg-col">${count?Math.round(total/count):0}</td></tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    function updateMonthlyDay(mKey, ext, day, cell) {
+        let val = cell.innerText.trim();
+        if (!monthlyData[mKey]) monthlyData[mKey] = {};
+        if (!monthlyData[mKey][ext]) monthlyData[mKey][ext] = {};
+        if (val === '' || val === '-') {
+            delete monthlyData[mKey][ext][day];
+        } else {
+            let num = parseInt(val);
+            if (isNaN(num) || num < 0) { alert("يرجى إدخال رقم صحيح وموجب"); renderMonthlyReport(); return; }
+            monthlyData[mKey][ext][day] = num;
+        }
+        localStorage.setItem('hr_monthly_v9', JSON.stringify(monthlyData));
+        renderMonthlyReport();
+    }
+
+    function checkEnter(e, cell) { if (e.key === 'Enter') { e.preventDefault(); cell.blur(); } }
+
+    function downloadMonthlyExcel() {
+        const table = document.getElementById('monthlyReportTable');
+        const wb = XLSX.utils.table_to_book(table, {sheet: "Monthly Performance"});
+        XLSX.writeFile(wb, `Report_${new Date().getMonth()+1}_${new Date().getFullYear()}.xlsx`);
+    }
+
+    async function downloadTableAsImage() {
+        const area = document.getElementById('tableCaptureArea');
+        try {
+            const canvas = await html2canvas(area, { scale: 3, backgroundColor: "#ffffff" });
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            const now = new Date();
+            link.download = `تقرير_الأداء_اليومي_${now.getDate()}_${now.getMonth()+1}_${now.getFullYear()}.png`;
+            link.href = image;
+            link.click();
+            showStatus("تم إنشاء وتحميل صورة التقرير اليومي بنجاح! 📸");
+        } catch (err) { alert("حدث خطأ أثناء تحميل الصورة."); }
+    }
+
+    async function downloadMonthlyAsImage() {
+        const scrollContainer = document.querySelector('.monthly-scroll');
+        const table = document.getElementById('monthlyReportTable');
+        const area = document.getElementById('monthlyCaptureArea');
+        if(table.rows.length <= 1) return alert("لا توجد بيانات كافية لتصويرها.");
+        const oldOverflow = scrollContainer.style.overflowX;
+        const oldWidth = area.style.width;
+        scrollContainer.style.overflowX = 'visible';
+        area.style.width = (table.offsetWidth + 60) + 'px'; 
+        try {
+            const canvas = await html2canvas(area, { scale: 3, backgroundColor: "#ffffff" });
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            const now = new Date();
+            link.download = `تقرير_الأداء_الشهري_العام_${now.getMonth()+1}_${now.getFullYear()}.png`;
+            link.href = image;
+            link.click();
+            showStatus("تم إنشاء وتحميل صورة التقرير الشهري بنجاح! 📸");
+        } catch (err) { alert("حدث خطأ أثناء التقاط صورة السجل."); } finally {
+            scrollContainer.style.overflowX = oldOverflow;
+            area.style.width = oldWidth;
+        }
+    }
+
+    function copyTableAsExcel(tId) {
+        const rows = Array.from(document.querySelectorAll(`#${tId} tr`));
+        let text = rows.map(r => Array.from(r.children).map(c => c.innerText).join('\t')).join('\n');
+        navigator.clipboard.writeText(text); showStatus("تم نسخ النص للإكسيل! 📋");
+    }
+
+    function clearMonthlyData() {
+        const now = new Date();
+        const mKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+        if(confirm(`هل أنت متأكد من مسح سجل شهر ${mKey} بالكامل؟`)) {
+            monthlyData[mKey] = {};
+            localStorage.setItem('hr_monthly_v9', JSON.stringify(monthlyData));
+            renderMonthlyReport();
+            showStatus("تم مسح بيانات الشهر بنجاح.");
+        }
+    }
+
+    function showStatus(msg) {
+        const s = document.getElementById('copyStatus'); s.innerText = msg; s.style.display = 'block';
+        setTimeout(() => s.style.display = 'none', 4000);
+    }
+    
+    renderEmployeeList();
+</script>
+</body>
+</html>
