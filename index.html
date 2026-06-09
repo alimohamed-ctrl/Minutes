@@ -87,7 +87,16 @@
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
         .btn-img { background: #e67e22; } .btn-excel { background: #3498db; }
         
-        .transfer-box { background: rgba(99, 102, 241, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: inline-block; border: 1px solid var(--accent); }
+        /* تحسين صندوق الترحيل الجانبي ليطابق تماماً الأبعاد الجمالية المقترحة من قبلكم في الصورة */
+        .transfer-side-box {
+            background: rgba(99, 102, 241, 0.04);
+            padding: 22px;
+            border-radius: 16px;
+            border: 2px solid var(--border);
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+        
         .copy-status { font-weight: 900; color: var(--secondary); display: none; margin-top: 10px; font-size: 1.1rem; text-align: center; }
 
         .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 8px; vertical-align: middle; }
@@ -129,53 +138,69 @@
         </div>
 
         <div id="results-section" style="display:none;">
-            <div class="text-center mb-3">
-                <div class="transfer-box shadow-sm">
-                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
-                    <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
-                    <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
-                        🚀 ترحيل للتقرير وجوجل شيت
-                    </button>
+            <!-- ⚡ إعادة تنظيم شبكية ذكية لـ عرض الجدول وصندوق التحكم جنباً إلى جنب لمنع الفراغات العريضة -->
+            <div class="row g-4 align-items-start mt-2">
+                
+                <!-- الطرف الأيمن: يشمل الجدول الفعلي والمتوسط الحسابي (مساحة 65%) -->
+                <div class="col-lg-8 col-md-12">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
+                        <button class="btn btn-sm btn-warning fw-bold text-white px-3" onclick="downloadDailyTableOnly()">📸 صورة جدول اليوم فقط</button>
+                    </div>
+                    
+                    <div id="dailyTableCaptureArea" class="shadow-sm card p-3 mb-0">
+                        <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.07); font-size:1.05rem; padding: 10px; border-radius: 10px;">
+                            📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات.
+                        </div>
+                        <table class="pro-table m-0" id="summaryTable">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0, 'summaryTable')">الاسم ⇅</th>
+                                    <th onclick="sortTable(1, 'summaryTable')">التحويلة ⇅</th>
+                                    <th onclick="sortTable(2, 'summaryTable', true)">عدد الدقائق ⇅</th>
+                                    <th onclick="sortTable(3, 'summaryTable', true)">عدد المكالمات ⇅</th>
+                                    <th onclick="sortTable(4, 'summaryTable', true)">تارجت الدقائق ⇅</th>
+                                    <th onclick="sortTable(5, 'summaryTable', true)" class="orange-target-header">المتبقي لتارجت اليوم ⇅</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-                <br>
-                <button class="btn-action btn-excel" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
-                <div id="copyStatus" class="copy-status"></div>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
-                <button class="btn btn-sm btn-warning fw-bold text-white" onclick="downloadDailyTableOnly()">📸 صورة جدول اليوم فقط</button>
-            </div>
-            <div id="dailyTableCaptureArea" class="shadow-sm card mb-4">
-                <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.08); font-size:1.1rem; padding: 8px;">
-                    📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات.
+
+                <!-- الطرف الأيسر: صندوق ترحيل التاريخ المقتبس من صورتكم + أزرار المزامنة (مساحة 35%) -->
+                <div class="col-lg-4 col-md-12">
+                    <h5 class="fw-bold text-secondary mb-2 text-center text-lg-start">⚙️ لوحة التحكم والمزامنة</h5>
+                    <div class="transfer-side-box card shadow-sm mb-3">
+                        <label class="fw-bold mb-2 text-muted d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
+                        <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
+                        <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
+                            🚀 ترحيل للتقرير وجوجل شيت
+                        </button>
+                    </div>
+                    <button class="btn-action btn-excel w-100 py-2 fs-5 shadow-sm" style="border-radius: 10px;" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
+                    <div id="copyStatus" class="copy-status"></div>
                 </div>
-                <table class="pro-table" id="summaryTable">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable(0, 'summaryTable')">الاسم ⇅</th>
-                            <th onclick="sortTable(1, 'summaryTable')">التحويلة ⇅</th>
-                            <th onclick="sortTable(2, 'summaryTable', true)">عدد الدقائق ⇅</th>
-                            <th onclick="sortTable(3, 'summaryTable', true)">عدد المكالمات ⇅</th>
-                            <th onclick="sortTable(4, 'summaryTable', true)">تارجت الدقائق ⇅</th>
-                            <th onclick="sortTable(5, 'summaryTable', true)" class="orange-target-header">المتبقي لتارجت اليوم ⇅</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+
             </div>
 
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لتحليل اليوم</h5>
-                <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم فقط</button>
-            </div>
-            <div id="dailyChartCaptureArea" class="shadow-sm card">
-                <div class="chart-box-card m-0">
-                    <div class="chart-container">
-                        <canvas id="dailyChart"></canvas>
+            <!-- صف ومساحة الرسم البياني اليومي المستقل بالأسفل بالكامل عريض وواضح -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لتحليل اليوم</h5>
+                        <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم فقط</button>
+                    </div>
+                    <div id="dailyChartCaptureArea" class="shadow-sm card">
+                        <div class="chart-box-card m-0">
+                            <div class="chart-container">
+                                <canvas id="dailyChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -357,14 +382,12 @@
         const p = t.trim().split(':'); return p.length === 3 ? (+p[0]*3600) + (+p[1]*60) + (+p[2]) : 0;
     }
 
-    // ⚡ دالة قراءة ومعالجة بيانات ياستر الذكية والمصححة بالكامل
     function processData() {
         const input = document.getElementById('rawInput').value.trim(); if (!input) return;
         const lines = input.split('\n'); let callData = {}; currentProcessedMins = {};
         
         lines.forEach(line => {
             if (!line.trim()) return;
-            // تقسيم السطر بمرونة تامة سواء عبر علامات التاب المرفوعة أو المسافات المتعددة لتفادي التوقف
             const cols = line.split(/\t|\s{2,}/); 
             if (line.includes("Extension") || cols.length < 3) return;
             
