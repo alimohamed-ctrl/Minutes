@@ -24,7 +24,6 @@
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
-        /* تثبيت الهيدر العلوي بشكل احترافي أثناء عمل Scroll مع إضافة مساحة تنفس وحماية للخلفية */
         body { background-color: var(--bg); font-family: 'Cairo', sans-serif; padding-top: 100px; color: var(--text); transition: 0.3s; }
         
         .header-top { 
@@ -130,7 +129,6 @@
 </head>
 <body>
 
-<!-- الهيدر العلوي الثابت والمحمي بالـ Sticky Scroll -->
 <div class="header-top">
     <div class="custom-tabs">
         <button class="tab-btn active" onclick="showPage('reports-page', this)">📊 التقرير اليومي</button>
@@ -152,7 +150,6 @@
         </div>
 
         <div id="results-section" style="display:none;">
-            <!-- التوزيع الشبكي السيمتري المحسن المتناسق 50% / 50% -->
             <div class="row g-4 align-items-start mt-1">
                 
                 <!-- الطرف الأيمن: جدول الأداء اليومي الفعلي ومربع المتوسط -->
@@ -182,31 +179,32 @@
                     </div>
                 </div>
 
-                <!-- الطرف الأيسر: لوحة التحكم الجانبية والكروت المستقلة (🚨 تم إزالة زر نسخ الإكسيل تماماً من هنا) -->
+                <!-- الطرف الأيسر: لوحة التحكم الجانبية والكروت المستقلة -->
                 <div class="col-lg-6 col-md-12 separator-border-right">
                     <div class="left-control-panel">
                         
                         <!-- كارت التحكم في ترحيل التاريخ المباشر لجوجل شيت -->
                         <div class="transfer-side-box card shadow-sm mb-0">
                             <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
+                            <!-- 🌟 إصلاح معرّف التاريخ (id) ليعود ويعمل بشكل تلقائي لتاريخ اليوم الحالي فوراً -->
                             <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
                             <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
                                 🚀 ترحيل للتقرير وجوجل شيت
                             </button>
                         </div>
                         
-                        <!-- كارت مجمع لأعلى 3 موظفين أداءً اليوم -->
+                        <!-- 🥇 كارت مجمع لأعلى 5 موظفين أداءً اليوم -->
                         <div class="kpi-business-card kpi-card-success shadow-sm" id="liveTopCard">
-                            <div class="kpi-title">🏆 أعلى 3 موظفين أداءً اليوم</div>
-                            <div id="top3EmployeesContainer" class="d-flex flex-column gap-2">
+                            <div class="kpi-title">🏆 أعلى 5 موظفين أداءً اليوم</div>
+                            <div id="top5EmployeesContainer" class="d-flex flex-column gap-2">
                                 <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
                         </div>
 
-                        <!-- كارت مجمع لأقل 3 موظفين أداءً اليوم -->
+                        <!-- ⚠️ كارت مجمع لأقل 5 موظفين أداءً اليوم -->
                         <div class="kpi-business-card kpi-card-danger shadow-sm" id="liveLowCard">
-                            <div class="kpi-title">⚠️ أقل 3 موظفين أداءً اليوم</div>
-                            <div id="low3EmployeesContainer" class="d-flex flex-column gap-2">
+                            <div class="kpi-title">⚠️ أقل 5 موظفين أداءً اليوم</div>
+                            <div id="low5EmployeesContainer" class="d-flex flex-column gap-2">
                                 <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
                         </div>
@@ -220,7 +218,7 @@
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لتحليل اليوم</h5>
-                        <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم + الكروت المدمجة</button>
+                        <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="downloadDailyChartOnly()">📸 صورة الشارت + الكروت بالأسفل مدمجة</button>
                     </div>
                     <div id="dailyChartCaptureArea" class="shadow-sm card">
                         <div class="chart-box-card m-0" id="actualChartContainerBox">
@@ -326,6 +324,9 @@
     Chart.register(ChartDataLabels);
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
+
+    // تفعيل ضبط تاريخ اليوم الحالي بشكل برمي تلقائي ومضمون عند إقلاع الواجهة
+    document.getElementById('transferDate').valueAsDate = new Date();[cite: 1]
 
     let employees = [];
     let monthlyData = {};
@@ -464,27 +465,28 @@
         
         sortedArray.sort((a, b) => b.mins - a.mins);
         
+        // 📊 حساب وحقن أعلى 5 وأقل 5 موظفين داخل الحاويات المحدثة
         if(sortedArray.length > 0) {
-            const top3Container = document.getElementById('top3EmployeesContainer');
-            const low3Container = document.getElementById('low3EmployeesContainer');
+            const top5Container = document.getElementById('top5EmployeesContainer');
+            const low5Container = document.getElementById('low5EmployeesContainer');
             
-            top3Container.innerHTML = "";
-            low3Container.innerHTML = "";
+            top5Container.innerHTML = "";
+            low5Container.innerHTML = "";
             
-            const topMedals = ["🥇", "🥈", "🥉"];
-            for(let i=0; i<Math.min(3, sortedArray.length); i++) {
+            const topMedals = ["🥇", "🥈", "🥉", "🏅", "🏅"];
+            for(let i=0; i<Math.min(5, sortedArray.length); i++) {
                 const item = sortedArray[i];
-                top3Container.innerHTML += `
+                top5Container.innerHTML += `
                     <div class="kpi-list-item">
-                        <span class="kpi-name-span"><span>${topMedals[i]}</span> ${item.name}</span>
+                        <span class="kpi-name-span"><span>${topMedals[i] || "🏅"}</span> ${item.name}</span>
                         <span class="kpi-sub-badge text-success" style="background: rgba(16,185,129,0.12);">${item.mins} دقيقة</span>
                     </div>`;
             }
             
             let reverseArray = [...sortedArray].reverse();
-            for(let i=0; i<Math.min(3, reverseArray.length); i++) {
+            for(let i=0; i<Math.min(5, reverseArray.length); i++) {
                 const item = reverseArray[i];
-                low3Container.innerHTML += `
+                low5Container.innerHTML += `
                     <div class="kpi-list-item">
                         <span class="kpi-name-span"><span>🔻</span> ${item.name}</span>
                         <span class="kpi-sub-badge text-danger" style="background: rgba(239,68,68,0.12);">${item.mins} دقيقة</span>
@@ -911,12 +913,6 @@
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    function downloadMonthlyExcel() {
-        const table = document.getElementById('monthlyReportTable');
-        const wb = XLSX.utils.table_to_book(table, {sheet: "Monthly Performance"});
-        XLSX.writeFile(wb, `Report_${new Date().getMonth()+1}_${new Date().getFullYear()}.xlsx`);
-    }
-
     async function downloadDailyTableOnly() {
         const area = document.getElementById('dailyTableCaptureArea');
         try {
@@ -928,11 +924,12 @@
         } catch (err) { alert("حدث خطأ في استخراج صورة الجدول"); }
     }
 
+    // 📸 الدالة الاستراتيجية الجديدة لإصلاح العطل ودمج الشارت والكروت أفقيّاً أسفل منه بدقة تامة!
     async function downloadDailyChartOnly() {
-        const originalChartContainer = document.getElementById('actualChartContainerBox');
         const topCard = document.getElementById('liveTopCard');
         const lowCard = document.getElementById('liveLowCard');
         
+        // 1. إنشاء حاوية مؤقتة فخمة بالخلفية
         const tempWrapper = document.createElement('div');
         tempWrapper.style.position = 'absolute';
         tempWrapper.style.top = '-9999px';
@@ -947,39 +944,45 @@
         
         tempWrapper.innerHTML = `<h3 style="text-align:center; margin-bottom: 25px; font-weight: 900; color: #6366f1;">📈 ملخص الرسم البياني ومؤشرات الأداء اليومية</h3>`;
         
-        const flexRow = document.createElement('div');
-        flexRow.style.display = 'flex';
-        flexRow.style.gap = '25px';
-        flexRow.style.alignItems = 'center';
-        
-        const chartCol = document.createElement('div');
-        chartCol.style.flex = '0 0 62%';
-        chartCol.style.height = '400px';
-        chartCol.style.border = '2px solid var(--border)';
-        chartCol.style.borderRadius = '14px';
-        chartCol.style.padding = '15px';
-        chartCol.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff';
+        // الجزء العلوي: حاوية الشارت الكبيرة عريضة بالكامل لعدم انضغاط الأسماء
+        const chartRow = document.createElement('div');
+        chartRow.style.width = '100%';
+        chartRow.style.height = '400px';
+        chartRow.style.border = '2px solid var(--border)';
+        chartRow.style.borderRadius = '14px';
+        chartRow.style.padding = '15px';
+        chartRow.style.marginBottom = '25px';
+        chartRow.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff';
         
         const tempCanvas = document.createElement('canvas');
-        chartCol.appendChild(tempCanvas);
+        chartRow.appendChild(tempCanvas);
+        tempWrapper.appendChild(chartRow);
+
+        // 🌟 التعديل الاستراتيجي المطلوب: صف سفلي مرن يضع الكارتين جنب إلى جنب (أفقيّاً) لراحة السيمترية
+        const cardsFlexRow = document.createElement('div');
+        cardsFlexRow.style.display = 'flex';
+        cardsFlexRow.style.gap = '20px';
+        cardsFlexRow.style.width = '100%';
         
-        const cardsCol = document.createElement('div');
-        cardsCol.style.flex = '0 0 35%';
-        cardsCol.style.display = 'flex';
-        cardsCol.style.flexDirection = 'column';
-        cardsCol.style.gap = '20px';
+        const rightCardCol = document.createElement('div'); rightCardCol.style.flex = '1';
+        const leftCardCol = document.createElement('div'); leftCardCol.style.flex = '1';
         
         const clonedTop = topCard.cloneNode(true);
         const clonedLow = lowCard.cloneNode(true);
         clonedTop.style.width = '100%';
         clonedLow.style.width = '100%';
-        cardsCol.appendChild(clonedTop);
-        cardsCol.appendChild(clonedLow);
         
-        flexRow.appendChild(chartCol);
-        flexRow.appendChild(cardsCol);
-        tempWrapper.appendChild(flexRow);
+        rightCardCol.appendChild(clonedTop);
+        leftCardCol.appendChild(clonedLow);
+        cardsFlexRow.appendChild(rightCardCol);
+        cardsFlexRow.appendChild(leftCardCol);
+        tempWrapper.appendChild(cardsFlexRow);
+
         document.body.appendChild(tempWrapper);
+        
+        // جلب ألوان النصوص والشبكات النشطة لتفادي مشكلة التعطل السابقة
+        const currentTextColor = getChartTextColor();
+        const currentGridColor = getGridColor();
         
         const tempChart = new Chart(tempCanvas.getContext('2d'), {
             type: 'bar',
@@ -998,8 +1001,8 @@
                     }
                 },
                 scales: {
-                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: getGridColor() } },
-                    y: { beginAtZero: true, ticks: { color: currentTextColor }, grid: { color: getGridColor() } }
+                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: currentGridColor } },
+                    y: { beginAtZero: true, ticks: { color: currentTextColor }, grid: { color: currentGridColor } }
                 }
             }
         });
@@ -1012,7 +1015,7 @@
                 link.href = canvasImage.toDataURL("image/png");
                 link.click();
             } catch (err) {
-                alert("حدث خطأ أثناء استخراج الصورة المدمجة.");
+                alert("حدث خطأ أثناء استخراج الصورة المدمجة الكلية.");
             } finally {
                 tempChart.destroy();
                 document.body.removeChild(tempWrapper);
