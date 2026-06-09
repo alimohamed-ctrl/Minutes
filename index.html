@@ -15,10 +15,12 @@
         :root { 
             --primary: #0f172a; --secondary: #10b981; --danger: #ef4444; --warning: #d97706; --accent: #6366f1;
             --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --border: #cbd5e1;
+            --vacation-bg: #f1f5f9; /* لون رمادي فاتح للإجازات */
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         }
         [data-theme="dark"] {
             --bg: #0b0f19; --card-bg: #111827; --text: #f9fafb; --border: #374151; --primary: #3b82f6;
+            --vacation-bg: #1e293b; /* لون رمادي متناسق للوضع المظلم */
             --chart-box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
@@ -40,7 +42,7 @@
         .card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; padding: 25px; }
         textarea { background: var(--card-bg); color: var(--text); border-radius: 12px; border: 2px solid var(--border); padding: 15px; height: 120px; width: 100%; font-size: 1rem; }
 
-        #tableCaptureArea, #employeesCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
+        #tableCaptureArea, #justTableCaptureArea, #justChartCaptureArea, #supervisorsCaptureArea { padding: 30px; background: var(--card-bg); border-radius: 16px; direction: rtl; }
         
         .pro-table, .monthly-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); margin-bottom: 15px; table-layout: auto !important; }
         .pro-table th, .monthly-table th { background: var(--primary); color: #fff !important; padding: 14px 10px; font-weight: 700; text-align: center; border: 1px solid var(--border); cursor: pointer; user-select: none; }
@@ -48,45 +50,28 @@
         .pro-table td, .monthly-table td { padding: 14px 8px; text-align: center; border: 1px solid var(--border); font-weight: 700; color: var(--text); }
         .pro-table tbody tr:nth-child(even), .monthly-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
 
-        .monthly-table th, .monthly-table td {
-            padding: 8px 4px !important;
-            font-size: 0.85rem !important;
-        }
+        .monthly-table th, .monthly-table td { padding: 8px 4px !important; font-size: 0.85rem !important; }
 
         .pro-table th:nth-child(1), .pro-table td:nth-child(1),
-        .monthly-table th:nth-child(1), .monthly-table td:nth-child(1) {
-            min-width: 140px !important;
-            font-size: 0.9rem !important;
-        }
+        .monthly-table th:nth-child(1), .monthly-table td:nth-child(1) { min-width: 140px !important; font-size: 0.9rem !important; }
 
-        .orange-target-header {
-            background: var(--warning) !important;
-            color: #ffffff !important;
-        }
+        .orange-target-header { background: var(--warning) !important; color: #ffffff !important; }
 
         .monthly-table th:last-child, .monthly-table td:last-child {
-            min-width: 160px !important;
-            width: 160px !important;
-            white-space: nowrap !important;
-            font-size: 0.9rem !important;
+            min-width: 160px !important; width: 160px !important; white-space: nowrap !important; font-size: 0.9rem !important;
         }
 
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
         .req-col { color: #b45309 !important; background: rgba(245, 158, 11, 0.05); font-weight: 900; }
+        
+        /* تلوين خلايا الإجازات (التي تحتوي على شرطة) باللون الرمادي الفاتح */
+        .vacation-cell { background-color: var(--vacation-bg) !important; color: #94a3b8 !important; font-weight: 400 !important; }
 
         .chart-box-card {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 18px;
-            padding: 24px;
-            margin: 25px 0;
-            box-shadow: var(--chart-box-shadow);
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: var(--card-bg); border: 2px solid var(--border); border-radius: 18px; padding: 24px; margin: 25px 0; box-shadow: var(--chart-box-shadow); transition: transform 0.2s, box-shadow 0.2s;
         }
-        .chart-box-card:hover {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+        .chart-box-card:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
         .chart-container { position: relative; height: 380px; width: 100%; }
 
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
@@ -110,6 +95,9 @@
         .toggle-days-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
         .section-title-business { font-weight: 900; color: var(--accent); border-right: 5px solid var(--accent); padding-right: 15px; margin: 35px 0 20px 0; }
+        
+        /* تصفيف الخلايا القابلة للتعديل يدوياً لإعطاء تلميح للمستخدم */
+        [contenteditable="true"]:focus { background: rgba(99, 102, 241, 0.1) !important; outline: 2px solid var(--accent); border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -123,6 +111,7 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
+    <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -174,23 +163,26 @@
         </div>
     </div>
 
+    <!-- الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h5 class="fw-bold text-primary m-0" id="monthlyTitle">سجل الأداء الشهري</h5>
                 <div>
-                    <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadEmployeesSection()">📸 صورة أداء الموظفين</button>
-                    <button class="btn btn-sm btn-info me-2 fw-bold text-white" onclick="downloadSupervisorsSection()">📸 صورة أداء المشرفين</button>
                     <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
                 </div>
             </div>
 
             <div class="supervisor-filter-container" id="supervisorFilters"></div>
             
-            <div id="employeesCaptureArea" class="mb-4">
-                <h4 class="section-title-business">📊 سجل أداء موظفي الفريق</h4>
+            <!-- الجزء الأول: الموظفون -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h4 class="section-title-business m-0">📊 سجل أداء موظفي الفريق</h4>
+                    <button class="btn btn-sm btn-warning fw-bold text-white" onclick="downloadJustTableSection()">📸 صورة جدول الموظفين فقط</button>
+                </div>
                 
-                <div class="days-toggle-bar">
+                <div class="days-toggle-bar mt-3">
                     <span class="fw-bold align-self-center me-2">نطاق عرض الأيام:</span>
                     <button class="toggle-days-btn" id="btn-show-1-10" onclick="toggleDaysVisibility(1, 10, this)">من 1 إلى 10</button>
                     <button class="toggle-days-btn" id="btn-show-11-20" onclick="toggleDaysVisibility(11, 20, this)">من 11 إلى 20</button>
@@ -198,30 +190,44 @@
                     <button class="toggle-days-btn active" id="btn-show-all" onclick="toggleDaysVisibility(1, 31, this)">الشهر كامل (31 يوم)</button>
                 </div>
 
-                <div class="monthly-scroll">
-                    <table class="monthly-table" id="monthlyReportTable">
-                        <thead>
-                            <tr id="monthlyHeader">
-                                <th onclick="sortMonthlyTable(0)">الاسم ⇅</th>
-                                <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
-                                <th id="daysPlaceholder"></th>
-                                <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
-                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">الدقائق الزيادة المطلوبة ⇅</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div id="justTableCaptureArea">
+                    <div class="monthly-scroll">
+                        <table class="monthly-table" id="monthlyReportTable">
+                            <thead>
+                                <tr id="monthlyHeader">
+                                    <th onclick="sortMonthlyTable(0)">الاسم ⇅</th>
+                                    <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
+                                    <th id="daysPlaceholder"></th>
+                                    <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
+                                    <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">الدقائق الزيادة المطلوبة ⇅</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="chart-box-card">
-                    <div class="chart-container">
-                        <canvas id="monthlyChart"></canvas>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
+                    <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لمتوسط الموظفين</h5>
+                    <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadJustChartSection()">📸 صورة الشارت فقط</button>
+                </div>
+
+                <div id="justChartCaptureArea">
+                    <div class="chart-box-card">
+                        <div class="chart-container">
+                            <canvas id="monthlyChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="supervisorsCaptureArea">
-                <h4 class="section-title-business">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
+            <!-- الجزء الثاني: المشرفون -->
+            <div id="supervisorsCaptureArea" class="mt-5">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <h4 class="section-title-business m-0">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
+                    <button class="btn btn-sm btn-info fw-bold text-white" onclick="downloadSupervisorsSection()">📸 صورة قسم المشرفين كاملاً (الجدول + الشارت)</button>
+                </div>
+                
                 <table class="pro-table text-center shadow-sm" id="supervisorTable">
                     <thead>
                         <tr>
@@ -355,28 +361,46 @@
 
         exts.forEach(ext => {
             const info = callData[ext];
-            const emp = employees.find(e => String(e.ext).trim() === String(ext).trim()) || {name:"غير مسجل", target:180};
+            const emp = employees.find(e => String(e.ext).trim() === String(ext).trim());
+            
+            // 🚨 تعديل استراتيجي: استثناء أي موظف غير مسجل في الشيت من الظهور في التقرير اليومي
+            if (!emp) return; 
             
             const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
-            
             const individualTarget = emp.target || 180;
             const remainingForToday = (individualTarget - info.mins) > 0 ? (individualTarget - info.mins) : '✅';
 
             chartLabels.push(emp.name);
             chartData.push(info.mins);
 
+            // إتاحة التعديل اليدوي المباشر للتارجت والمتبقي بمرونة كاملة عبر الكود
             tbody.innerHTML += `<tr>
                 <td class="${cls}">${emp.name}</td>
                 <td>${ext}</td>
                 <td class="${cls}">${info.mins}</td>
                 <td style="color:var(--accent)">${info.calls}</td>
-                <td>${individualTarget}</td>
-                <td class="req-col">${remainingForToday}</td>
+                <td contenteditable="true" onblur="recalculateRowMins(this, ${info.mins})">${individualTarget}</td>
+                <td contenteditable="true" class="req-col">${remainingForToday}</td>
             </tr>`;
         });
         
+        if (tbody.children.length === 0) {
+            alert("لم يتم العثور على أي تحويلات مسجلة بقاعدة البيانات الحالية.");
+            return;
+        }
+
         document.getElementById('results-section').style.display = 'block';
+        document.getElementById('liveTargetNotice').innerText = "⚠️ ترحيل الأداء سيقوم بتحديث تارجت اليوم التالي تلقائياً في الشيت بناءً على العجز المتراكم الحالي.";
         buildDailyChart(chartLabels, chartData, calculatedAvg);
+    }
+
+    // دالة مرنة مخصصة لإعادة الحساب المحلي الفوري عند تعديل خلايا اليومي يدوياً
+    function recalculateRowMins(cellElement, actualMins) {
+        let newTarget = parseInt(cellElement.innerText.trim());
+        if (isNaN(newTarget) || newTarget < 0) { alert("يرجى إدخال قيمة صحيحة"); return; }
+        let remainingCell = cellElement.nextElementSibling;
+        let gap = newTarget - actualMins;
+        remainingCell.innerText = gap > 0 ? gap : '✅';
     }
 
     function buildDailyChart(labels, dataValues, currentAvg) {
@@ -412,13 +436,8 @@
                 plugins: {
                     legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
-                        anchor: 'end',
-                        align: 'top',
-                        font: { weight: 'bold', family: 'Cairo', size: 12 },
-                        color: currentTextColor,
-                        formatter: function(value, context) {
-                            return context.datasetIndex === 0 ? value : null;
-                        }
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 12 }, color: currentTextColor,
+                        formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
                 scales: { 
@@ -450,13 +469,11 @@
 
         try {
             await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: "transferDay", monthSheet: monthName, day: day, data: currentProcessedMins })
             });
             showStatus(`تم ترحيل البيانات وتحديث قاعدة بيانات التارجت بنجاح! 🚀✅`);
-            loadEmployees(); // تحديث أرقام التارجت فريش من الشيت بعد التعديل
+            loadEmployees(); 
         } catch (error) { alert("حدث خطأ أثناء الترحيل."); }
         finally {
             btn.disabled = false;
@@ -475,7 +492,7 @@
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getMonthly&monthSheet=${encodeURIComponent(monthName)}`);
             monthlyData[mKey] = await response.json();
-            await loadEmployees(); // جلب التارجت المحدث فريش من الشيت بعد معالجة الصفحة الشهرية
+            await loadEmployees(); 
         } catch (error) { console.error(error); }
 
         renderMonthlyReport(mKey, monthName);
@@ -498,8 +515,7 @@
         window.lastMonthKey = mKey; window.lastMonthName = monthName; 
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
-        const maxDay = 31; 
-
+        
         const header = document.getElementById('monthlyHeader');
         while(header.children.length > 4) header.removeChild(header.children[2]);
         
@@ -517,7 +533,6 @@
         employees.forEach(emp => {
             let totalMins = 0, activeDays = 0, totalCallsEstimate = 0;
             
-            // حساب البيانات التراكمية بناءً على كامل أيام العمل الفعلية المسجلة
             for(let i = 1; i <= 31; i++) {
                 const v = data[emp.ext]?.[i];
                 if(v !== undefined && v !== null && v !== '-') {
@@ -543,18 +558,21 @@
                 
                 for(let i = activeStartDay; i <= activeEndDay; i++) { 
                     const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
-                    row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
+                    // إذا كانت الخلية فارغة (تحتوي على شرطة) يتم وسمها بكلاس الإجازة لكي تتلون بالرمادي الفاتح
+                    const isVacation = (v === '-') ? 'class="vacation-cell"' : '';
+                    row += `<td ${isVacation} contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 }
                 
-                const cls = employeeAverage >= 180 ? 'above-avg' : 'below-avg';
+                const individualTarget = emp.target || 180;
+                const cls = employeeAverage >= individualTarget ? 'above-avg' : 'below-avg';
                 
-                // تعديل المعادلة الحسابية: (أيام العمل الفعلية في الشهر × 180) - إجمالي المحقق الفعلي
                 var totalRequiredMins = activeDays * 180;
                 var cumulativeGap = totalRequiredMins - totalMins;
                 var reqMinsValue = cumulativeGap > 0 ? `+${cumulativeGap}` : "⭐ مكتمل";
 
                 row += `<td class="avg-col ${cls}">${employeeAverage}</td>`;
-                row += `<td class="req-col">${reqMinsValue}</td></tr>`;
+                // السماح للمدير بتعديل القيمة الزيادة المطلوبة يدوياً مباشرة من الجدول بمرونة تامة
+                row += `<td contenteditable="true" class="req-col">${reqMinsValue}</td></tr>`;
                 tbody.innerHTML += row;
 
                 chartLabels.push(emp.name);
@@ -594,18 +612,12 @@
                 }]
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
-                        anchor: 'end', 
-                        align: 'top', 
-                        font: { weight: 'bold', family: 'Cairo' }, 
-                        color: currentTextColor,
-                        formatter: function(value, context) {
-                            return context.datasetIndex === 0 ? value : null;
-                        }
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo' }, color: currentTextColor,
+                        formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
                 scales: {
@@ -669,18 +681,12 @@
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: {
-                        anchor: 'end', 
-                        align: 'top', 
-                        font: { weight: 'bold', family: 'Cairo' }, 
-                        color: currentTextColor,
-                        formatter: function(value, context) {
-                            return context.datasetIndex === 0 ? value : null;
-                        }
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo' }, color: currentTextColor,
+                        formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
                     }
                 },
                 scales: {
@@ -776,7 +782,7 @@
     async function downloadTableAsImage() {
         const area = document.getElementById('tableCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
             link.download = `تقرير_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
             link.href = canvas.toDataURL("image/png");
@@ -784,27 +790,41 @@
         } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
-    async function downloadEmployeesSection() {
+    // 📸 زر مخصص لالتقاط صورة لجدول الموظفين فقط
+    async function downloadJustTableSection() {
         const scrollContainer = document.querySelector('.monthly-scroll');
-        const area = document.getElementById('employeesCaptureArea');
+        const area = document.getElementById('justTableCaptureArea');
         const oldOverflow = scrollContainer.style.overflowX;
         scrollContainer.style.overflowX = 'visible'; 
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `أداء_الموظفين_الشهري.png`;
+            link.download = `جدول_أداء_الموظفين_فقط.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-        } catch (err) { alert("حدث خطأ أثناء تصوير قسم الموظفين."); } 
+        } catch (err) { alert("حدث خطأ في تصوير الجدول."); } 
         finally { scrollContainer.style.overflowX = oldOverflow; }
     }
 
+    // 📸 زر مخصص لالتقاط صورة لشارت الموظفين فقط
+    async function downloadJustChartSection() {
+        const area = document.getElementById('justChartCaptureArea');
+        try {
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const link = document.createElement('a');
+            link.download = `رسم_بياني_الموظفين_فقط.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } catch (err) { alert("حدث خطأ في تصوير الشارت."); }
+    }
+
+    // 📸 زر مخصص لالتقاط صورة لقسم المشرفين كاملاً (الجدول والشارت معاً)
     async function downloadSupervisorsSection() {
         const area = document.getElementById('supervisorsCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
-            link.download = `تحليل_أداء_المشرفين_الشهري.png`;
+            link.download = `تحليل_وقسم_المشرفين_الكامل.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         } catch (err) { alert("حدث خطأ أثناء تصوير قسم المشرفين."); }
