@@ -49,7 +49,16 @@
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
 
-        .chart-container { position: relative; margin: 30px auto; height: 380px; width: 100%; }
+        /* تصميم احترافي مع بوردر واضح وجذاب لحاويات الشارتات */
+        .chart-box-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin: 30px 0;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .chart-container { position: relative; height: 380px; width: 100%; }
 
         .monthly-scroll { overflow-x: auto; border-radius: 12px; background: var(--card-bg); padding: 10px; border: 1px solid var(--border); margin-top: 15px; }
         
@@ -81,6 +90,7 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
+    <!-- صفحة التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -106,7 +116,7 @@
             
             <div id="tableCaptureArea" class="shadow-sm card">
                 <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.08); font-size:1.2rem;">
-                    📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات. (التلوين مبني على هذا المتوسط)
+                    📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة مكالمات.
                 </div>
                 <table class="pro-table" id="summaryTable">
                     <thead>
@@ -122,13 +132,17 @@
                     <tbody></tbody>
                 </table>
                 
-                <div class="chart-container">
-                    <canvas id="dailyChart"></canvas>
+                <!-- حاوية الشارت اليومي المحدثة بالبوردر الواضح -->
+                <div class="chart-box-card">
+                    <div class="chart-container">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- صفحة الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -157,10 +171,14 @@
                     </table>
                 </div>
 
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
+                <!-- حاوية الشارت الشهري بالبوردر الجديد -->
+                <div class="chart-box-card">
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
                 </div>
 
+                <!-- جدول أداء المشرفين -->
                 <h4 class="section-title-business">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
                 <table class="pro-table text-center shadow-sm" id="supervisorTable">
                     <thead>
@@ -173,8 +191,11 @@
                     <tbody></tbody>
                 </table>
 
-                <div class="chart-container">
-                    <canvas id="supervisorChart"></canvas>
+                <!-- حاوية شارت المشرفين بالبوردر الجديد -->
+                <div class="chart-box-card">
+                    <div class="chart-container">
+                        <canvas id="supervisorChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -182,7 +203,6 @@
 </div>
 
 <script>
-    // تسجيل إضافة الداتا ليبلز لـ Chart.js عالمياً
     Chart.register(ChartDataLabels);
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
@@ -219,7 +239,7 @@
             employees = await response.json();
             renderSupervisorFilters();
         } catch (error) {
-            console.error("خطأ في جلب بيانات الموظفين والمشرفين:", error);
+            console.error("خطأ في جلب البيانات:", error);
             renderSupervisorFilters();
         }
     }
@@ -249,7 +269,6 @@
         const p = t.trim().split(':'); return p.length === 3 ? (+p[0]*3600) + (+p[1]*60) + (+p[2]) : 0;
     }
 
-    // معالجة التقرير اليومي وتطبيق الألوان التنافسية بناءً على المتوسط الفعلي الفريش لشارت وجدول اليوم
     function processData() {
         const input = document.getElementById('rawInput').value.trim(); if (!input) return;
         const lines = input.split('\n'); let callData = {}; currentProcessedMins = {};
@@ -268,7 +287,6 @@
         const exts = Object.keys(callData).sort();
         if(exts.length === 0) return;
 
-        // حساب المتوسط الحقيقي الدقيق للفريق اليوم
         const calculatedAvg = Object.values(callData).reduce((a,b)=>a+b.mins,0) / exts.length;
         document.getElementById('avgValue').innerText = calculatedAvg.toFixed(1);
         
@@ -279,7 +297,6 @@
             const info = callData[ext];
             const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
             
-            // المقارنة بالمتوسط الفعلي اليومي
             const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
 
             chartLabels.push(emp.name);
@@ -310,30 +327,32 @@
                 datasets: [{
                     label: 'المحقق الفعلي (دقيقة)',
                     data: dataValues,
-                    // التلوين في الشارت يعتمد بالكامل على مقارنة القيمة بالمتوسط الحالي
                     backgroundColor: dataValues.map(v => v >= currentAvg ? '#10b981' : '#ef4444'),
                     borderRadius: 6
                 }, {
                     type: 'line',
-                    label: `متوسط الفريق الحالي (${currentAvg.toFixed(1)} د)`,
-                    data: new Array(labels.length).fill(currentAvg),
-                    borderColor: '#6366f1',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
+                    label: 'التارجت القياسي (180 دقيقة)',
+                    data: new Array(labels.length).fill(180), // تم تعديل الخط ليكون 180 ثابتاً
+                    borderColor: '#f59e0b',
+                    borderWidth: 3,
                     pointRadius: 0,
-                    fill: false
+                    fill: false,
+                    datalabels: { display: false } // منع ظهور أي أرقام على خط التارجت لمنع التداخل
                 }]
             },
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false,
                 plugins: {
-                    datalabels: { // تفعيل ملصق البيانات لـ الدقائق فوق العمود مباشرة
+                    datalabels: { 
                         anchor: 'end',
                         align: 'top',
-                        font: { weight: 'bold', family: 'Cairo' },
+                        font: { weight: 'bold', family: 'Cairo', size: 12 },
                         color: '#475569',
-                        formatter: (val) => val
+                        formatter: function(value, context) {
+                            // تفعيل إظهار الرقم للأعمدة (index 0) وإخفائه تماماً عن خطوط الـ line
+                            return context.datasetIndex === 0 ? value : null;
+                        }
                     }
                 },
                 scales: { y: { beginAtZero: true } } 
@@ -408,28 +427,22 @@
         
         let chartLabels = [];
         let chartAverages = [];
-        
-        // هيكل لتجميع تحليلات المشرفين
         let supervisorAnalytics = {};
 
-        // 1. معالجة بيانات الموظفين
         employees.forEach(emp => {
             let totalMins = 0, activeDays = 0, totalCallsEstimate = 0;
             
-            // حساب البيانات لكل الأيام
             for(let i=1; i<=maxDay; i++) {
                 const v = data[emp.ext]?.[i];
                 if(v !== undefined && v !== null && v !== '-') {
                     totalMins += parseInt(v);
                     activeDays++;
-                    // تقدير تقريبي للمكالمات بناءً على نسبة الدقائق المحققة لدعم إحصاءات المشرفين العامة
                     totalCallsEstimate += Math.round(parseInt(v) * 0.6); 
                 }
             }
             
             const employeeAverage = activeDays ? Math.round(totalMins/activeDays) : 0;
 
-            // تجميع وتحليل البيانات للمشرفين
             if(emp.supervisor) {
                 if(!supervisorAnalytics[emp.supervisor]) {
                     supervisorAnalytics[emp.supervisor] = { totalCalls: 0, sumOfAverages: 0, employeeCount: 0 };
@@ -439,7 +452,6 @@
                 supervisorAnalytics[emp.supervisor].employeeCount += 1;
             }
 
-            // تطبيق فلتر المشرف الفعلي في العرض فقط للجدول الموظفين والشارت الخاص بهم
             if (selectedSupervisor === "الكل" || emp.supervisor === selectedSupervisor) {
                 let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`;
                 for(let i=1; i<=maxDay; i++) { 
@@ -447,7 +459,6 @@
                     row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 }
                 
-                // تحديد ما إذا كان الموظف فوق أو تحت تارجت المتوسط الشهري (180 دقيقة)
                 const cls = employeeAverage >= 180 ? 'above-avg' : 'below-avg';
                 row += `<td class="avg-col ${cls}">${employeeAverage}</td></tr>`;
                 tbody.innerHTML += row;
@@ -481,22 +492,28 @@
                     borderColor: '#f59e0b',
                     borderWidth: 2.5,
                     pointRadius: 0,
-                    fill: false
+                    fill: false,
+                    datalabels: { display: false } // خط التارجت نظيف بدون أي أرقام
                 }]
             },
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false,
                 plugins: {
-                    datalabels: { // إظهار الداتا ليبلز للشارت الشهري للموظفين
-                        anchor: 'end', align: 'top', font: { weight: 'bold' }, color: '#475569'
+                    datalabels: { 
+                        anchor: 'end', 
+                        align: 'top', 
+                        font: { weight: 'bold', family: 'Cairo' }, 
+                        color: '#475569',
+                        formatter: function(value, context) {
+                            return context.datasetIndex === 0 ? value : null;
+                        }
                     }
                 }
             }
         });
     }
 
-    // بناء وتعبئة صفحة وإحصاءات المشرفين وجدولهم المستقل
     function renderSupervisorSection(analyticsData) {
         const tbody = document.querySelector('#supervisorTable tbody');
         tbody.innerHTML = '';
@@ -541,7 +558,8 @@
                     borderColor: '#f59e0b',
                     borderWidth: 2,
                     pointRadius: 0,
-                    fill: false
+                    fill: false,
+                    datalabels: { display: false } // خط التارجت هنا أيضاً خط صامت
                 }]
             },
             options: {
@@ -549,7 +567,13 @@
                 maintainAspectRatio: false,
                 plugins: {
                     datalabels: {
-                        anchor: 'end', align: 'top', font: { weight: 'bold' }, color: '#475569'
+                        anchor: 'end', 
+                        align: 'top', 
+                        font: { weight: 'bold', family: 'Cairo' }, 
+                        color: '#475569',
+                        formatter: function(value, context) {
+                            return context.datasetIndex === 0 ? value : null;
+                        }
                     }
                 }
             }
@@ -637,12 +661,11 @@
         } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
-    // زر تحميل صورة التقرير الشهري بالكامل (يشمل الجداول والشارت الجديد للمشرفين)
     async function downloadMonthlyAsImage() {
         const scrollContainer = document.querySelector('.monthly-scroll');
         const area = document.getElementById('monthlyCaptureArea');
         const oldOverflow = scrollContainer.style.overflowX;
-        scrollContainer.style.overflowX = 'visible'; // فك السكرول لالتقاط كافة الأيام 31 كاملة
+        scrollContainer.style.overflowX = 'visible'; 
         try {
             const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
             const link = document.createElement('a');
