@@ -82,10 +82,9 @@
         .btn-action { border-radius: 10px; padding: 10px 25px; border: none; font-weight: 900; margin: 5px; color: #fff; transition: 0.2s; }
         .btn-excel { background: #3498db; }
         
-        /* 👥 لوحة التحكم الجانبية اليسرى المتناسقة مئة بالمئة برمجياً مع سيمترية الواجهة */
         .left-control-panel { display: flex; flex-direction: column; gap: 20px; }
         
-        /* خط فصل رأسي واضح وعميق للفصل الاستراتيجي بين الجزأين */
+        /* 🚨 تم إزالة الارتفاع الإجباري h-100 لتفادي المساحة البيضاء الزائدة المتداخلة بالصورة */
         .separator-border-right {
             border-right: 2px dashed var(--border);
             padding-right: calc(var(--bs-gutter-x) * .5);
@@ -95,7 +94,6 @@
             background: rgba(99, 102, 241, 0.03); padding: 20px; border-radius: 16px; border: 2px solid var(--border); text-align: center;
         }
         
-        /* كروت المجموعات العيا والدنيا بتصميم مدمج ومنظم جداً للعين */
         .kpi-business-card {
             border: 2px solid var(--border); border-radius: 16px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; background: var(--card-bg);
         }
@@ -138,6 +136,7 @@
         <button class="theme-btn" onclick="toggleTheme()">🌓 مظهر ليلي/نهاري</button>
     </div>
 
+    <!-- التقرير اليومي -->
     <div id="reports-page" class="page-content active">
         <div class="card p-4 text-center shadow-sm">
             <textarea id="rawInput" placeholder="الصق بيانات ياستر هنا..."></textarea>
@@ -149,15 +148,30 @@
         </div>
 
         <div id="results-section" style="display:none;">
-            <div class="row g-4 align-items-stretch mt-1">
+            <div class="text-center mb-3">
+                <div class="transfer-box shadow-sm">
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل للتقرير والـ Google Sheet:</label>
+                    <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
+                    <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
+                        🚀 ترحيل للتقرير وجوجل شيت
+                    </button>
+                </div>
+                <br>
+                <button class="btn-action btn-excel" onclick="copyTableAsExcel('summaryTable')">نسخ للإكسيل 📋</button>
+                <div id="copyStatus" class="copy-status"></div>
+            </div>
+            
+            <!-- ⚡ التوزيع الشبكي السيمتري المحسن لإنهاء الفراغ الأبيض رأسياً -->
+            <div class="row g-4 align-items-start mt-1">
                 
+                <!-- الطرف الأيمن: جدول الأداء اليومي الفعلي ومربع المتوسط (ينتهي آلياً بانتهاء الصفوف) -->
                 <div class="col-lg-6 col-md-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📋 جدول أداء اليوم الفعلي</h5>
                         <button class="btn btn-sm btn-warning fw-bold text-white px-3" onclick="downloadDailyTableOnly()">📸 صورة جدول اليوم فقط</button>
                     </div>
                     
-                    <div id="dailyTableCaptureArea" class="shadow-sm card p-3 mb-0 h-100">
+                    <div id="dailyTableCaptureArea" class="shadow-sm card p-3 mb-0">
                         <div class="avg-summary-box mb-3" style="background: rgba(99,102,241,0.07); font-size:1rem; padding: 10px; border-radius: 10px;">
                             📈 متوسط أداء الفريق الفعلي اليوم: <strong id="avgValue" class="text-primary">0</strong> دقيقة.
                         </div>
@@ -177,25 +191,29 @@
                     </div>
                 </div>
 
+                <!-- الطرف الأيسر: لوحة التحكم الجانبية والكروت المستقلة -->
                 <div class="col-lg-6 col-md-12 separator-border-right">
-                    <div class="left-control-panel h-100 justify-content-between">
+                    <div class="left-control-panel">
                         
+                        <!-- كارت التحكم في ترحيل التاريخ المباشر لجوجل شيت -->
                         <div class="transfer-side-box card shadow-sm mb-0">
                             <label class="fw-bold mb-2 text-muted d-block fs-6">تاريخ ترحيل البيانات المعتمد:</label>
-                            <input type="date" id="transferDate" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;">
-                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" id="transferBtn" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
+                            <input type="date" id="transferDateSide" class="form-control mb-3 text-center fw-bold fs-5" style="border: 2px solid var(--border); border-radius: 10px;" onchange="syncDates(this.value)">
+                            <button class="btn btn-success fw-bold w-100 py-2 fs-5 shadow-sm" style="background:var(--accent); border:none; border-radius: 10px;" onclick="transferToMonthly()">
                                 🚀 ترحيل للتقرير وجوجل شيت
                             </button>
                         </div>
                         
-                        <div class="kpi-business-card kpi-card-success shadow-sm">
+                        <!-- كارت مجمع لأعلى 3 موظفين أداءً اليوم -->
+                        <div class="kpi-business-card kpi-card-success shadow-sm" id="liveTopCard">
                             <div class="kpi-title">🏆 أعلى 3 موظفين أداءً اليوم</div>
                             <div id="top3EmployeesContainer" class="d-flex flex-column gap-2">
                                 <div class="kpi-list-item">جاري الحساب...</div>
                             </div>
                         </div>
 
-                        <div class="kpi-business-card kpi-card-danger shadow-sm">
+                        <!-- كارت مجمع لأقل 3 موظفين أداءً اليوم -->
+                        <div class="kpi-business-card kpi-card-danger shadow-sm" id="liveLowCard">
                             <div class="kpi-title">⚠️ أقل 3 موظفين أداءً اليوم</div>
                             <div id="low3EmployeesContainer" class="d-flex flex-column gap-2">
                                 <div class="kpi-list-item">جاري الحساب...</div>
@@ -209,14 +227,15 @@
 
             </div>
 
+            <!-- مساحة الرسم البياني اليومي العريض بالكامل بالأسفل -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                         <h5 class="fw-bold text-secondary m-0">📈 الرسم البياني لتحليل اليوم</h5>
-                        <button class="btn btn-sm btn-outline-primary fw-bold" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم فقط</button>
+                        <button class="btn btn-sm btn-outline-primary fw-bold px-3" onclick="downloadDailyChartOnly()">📸 صورة شارت اليوم + الكروت المدمجة</button>
                     </div>
                     <div id="dailyChartCaptureArea" class="shadow-sm card">
-                        <div class="chart-box-card m-0">
+                        <div class="chart-box-card m-0" id="actualChartContainerBox">
                             <div class="chart-container">
                                 <canvas id="dailyChart"></canvas>
                             </div>
@@ -228,6 +247,7 @@
         </div>
     </div>
 
+    <!-- الأداء الشهري -->
     <div id="monthly-page" class="page-content">
         <div class="card p-4 shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -284,6 +304,7 @@
                 </div>
             </div>
 
+            <!-- الجزء الثاني: المشرفون -->
             <div id="supervisorsCaptureArea" class="mt-5">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                     <h4 class="section-title-business m-0">👥 تحليل ومقارنة أداء مجموعات المشرفين</h4>
@@ -318,7 +339,11 @@
 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
-    document.getElementById('transferDate').valueAsDate = new Date();
+    // مزامنة التواريخ بين الصندوقين لمنع التضارب
+    function syncDates(val) {
+        document.getElementById('transferDate').value = val;
+    }
+    document.getElementById('transferDateSide').value = document.getElementById('transferDate').value;
 
     let employees = [];
     let monthlyData = {};
@@ -457,7 +482,6 @@
         
         sortedArray.sort((a, b) => b.mins - a.mins);
         
-        // 📊 استخراج وحقن أعلى 3 وأقل 3 موظفين ديناميكياً داخل الكروت التناظرية الجديدة
         if(sortedArray.length > 0) {
             const top3Container = document.getElementById('top3EmployeesContainer');
             const low3Container = document.getElementById('low3EmployeesContainer');
@@ -466,7 +490,6 @@
             low3Container.innerHTML = "";
             
             const topMedals = ["🥇", "🥈", "🥉"];
-            // معالجة أعلى 3 موظفين أداءً
             for(let i=0; i<Math.min(3, sortedArray.length); i++) {
                 const item = sortedArray[i];
                 top3Container.innerHTML += `
@@ -476,7 +499,6 @@
                     </div>`;
             }
             
-            // معالجة أقل 3 موظفين أداءً (عكس المصفوفة المرتفعة)
             let reverseArray = [...sortedArray].reverse();
             for(let i=0; i<Math.min(3, reverseArray.length); i++) {
                 const item = reverseArray[i];
@@ -634,7 +656,8 @@
         window.lastMonthKey = mKey; window.lastMonthName = monthName; 
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
-        
+        const maxDay = 31; 
+
         const header = document.getElementById('monthlyHeader');
         if (!header) return;
         while(header.children.length > 4) header.removeChild(header.children[2]);
@@ -772,7 +795,7 @@
             const data = analyticsData[supervisorName];
             const finalSupervisorAvg = data.employeeCount ? Math.round(data.sumOfAverages / data.employeeCount) : 0;
             
-            ssupLabels.push(supervisorName);
+            supLabels.push(supervisorName);
             supAverages.push(finalSupervisorAvg);
 
             tbody.innerHTML += `<tr>
@@ -923,15 +946,107 @@
         } catch (err) { alert("حدث خطأ في استخراج صورة الجدول"); }
     }
 
+    // 📸 الدالة المتطورة والمحدثة لدمج الشارت اليومي مع كروت الـ KPI الجانبية تلقائياً في صورة واحدة فخمة ومثالية للجروبات!
     async function downloadDailyChartOnly() {
-        const area = document.getElementById('dailyChartCaptureArea');
-        try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
-            const link = document.createElement('a');
-            link.download = `شارت_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-        } catch (err) { alert("حدث خطأ في استخراج صورة الشارت"); }
+        const originalChartContainer = document.getElementById('actualChartContainerBox');
+        const topCard = document.getElementById('liveTopCard');
+        const lowCard = document.getElementById('liveLowCard');
+        
+        // 1. إنشاء حاوية مؤقتة مخفية في الصفحة ومصممة بأسلوب البيزنس الشبكي المتجاور
+        const tempWrapper = document.createElement('div');
+        tempWrapper.style.position = 'absolute';
+        tempWrapper.style.top = '-9999px';
+        tempWrapper.style.right = '-9999px';
+        tempWrapper.style.width = '1200px';
+        tempWrapper.style.padding = '30px';
+        tempWrapper.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#111827' : '#ffffff';
+        tempWrapper.style.color = document.body.getAttribute('data-theme') === 'dark' ? '#f9fafb' : '#0f172a';
+        tempWrapper.style.fontFamily = 'Cairo, sans-serif';
+        tempWrapper.style.direction = 'rtl';
+        tempWrapper.style.borderRadius = '16px';
+        
+        // عنوان الصورة المدمجة فخم
+        tempWrapper.innerHTML = `<h3 style="text-align:center; margin-bottom: 25px; font-weight: 900; color: #6366f1;">📈 ملخص الرسم البياني ومؤشرات الأداء اليومية</h3>`;
+        
+        // صف مرن يتسع للشارت العريض والكروت الجانبية المستقلة مع مسافات تنفس مريحة
+        const flexRow = document.createElement('div');
+        flexRow.style.display = 'flex';
+        flexRow.style.gap = '25px';
+        flexRow.style.alignItems = 'center';
+        
+        // الجناح الأيمن المدمج: حاوية الشارت الكبيرة (60% من العرض)
+        const chartCol = document.createElement('div');
+        chartCol.style.flex = '0 0 62%';
+        chartCol.style.height = '400px';
+        chartCol.style.border = '2px solid var(--border)';
+        chartCol.style.borderRadius = '14px';
+        chartCol.style.padding = '15px';
+        chartCol.style.background = document.body.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff';
+        
+        // إنشاء كانفاس جديد مؤقت لنسخ وحقن أبعاد الشارت الحالي بدقة
+        const tempCanvas = document.createElement('canvas');
+        chartCol.appendChild(tempCanvas);
+        
+        // الجناح الأيسر المدمج: حاوية الكروت متراصة رأسياً (38% من العرض)
+        const cardsCol = document.createElement('div');
+        cardsCol.style.flex = '0 0 35%';
+        cardsCol.style.display = 'flex';
+        cardsCol.style.flexDirection = 'column';
+        cardsCol.style.gap = '20px';
+        
+        // استنساخ كروت التوب واللو الفعليين بدون المساس بأماكنهم على شاشة المدير
+        const clonedTop = topCard.cloneNode(true);
+        const clonedLow = lowCard.cloneNode(true);
+        clonedTop.style.width = '100%';
+        clonedLow.style.width = '100%';
+        cardsCol.appendChild(clonedTop);
+        cardsCol.appendChild(clonedLow);
+        
+        flexRow.appendChild(chartCol);
+        flexRow.appendChild(cardsCol);
+        tempWrapper.appendChild(flexRow);
+        document.body.appendChild(tempWrapper);
+        
+        // إعادة رسم جرافيك الـ Chart داخل الكانفاس الجديد بنفس إعدادات الألوان النشطة بالمتصفح
+        const tempChart = new Chart(tempCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: dailyChartInstance.data.labels,
+                datasets: JSON.parse(JSON.stringify(dailyChartInstance.data.datasets)) // نسخ عميق للبيانات والتلوين
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: getChartTextColor(), font: { family: 'Cairo', weight: 'bold' } } },
+                    datalabels: {
+                        anchor: 'end', align: 'top', font: { weight: 'bold', family: 'Cairo', size: 11 }, color: getChartTextColor(),
+                        formatter: function(value, context) { return context.datasetIndex === 0 ? value : null; }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: getChartTextColor(), font: { family: 'Cairo', weight: 'bold' } }, grid: { color: getGridColor() } },
+                    y: { beginAtZero: true, ticks: { color: getChartTextColor() }, grid: { color: getGridColor() } }
+                }
+            }
+        });
+        
+        // تأخير زمني ميكروسكوبي يضمن للمحرك اكتمال رسم الخطوط والملصقات بدقة قبل التقاط الشاشة
+        setTimeout(async () => {
+            try {
+                const canvasImage = await html2canvas(tempWrapper, { scale: 2, backgroundColor: null });
+                const link = document.createElement('a');
+                link.download = `تحليل_الأداء_اليومي_المدمج_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
+                link.href = canvasImage.toDataURL("image/png");
+                link.click();
+            } catch (err) {
+                alert("حدث خطأ أثناء استخراج الصورة المدمجة.");
+            } finally {
+                // تدمير الكائنات المؤقتة وحذف الحاوية تماماً من الخلفية بعد التحميل للحفاظ على خفة وسرعة الموقع
+                tempChart.destroy();
+                document.body.removeChild(tempWrapper);
+            }
+        }, 450);
     }
 
     async function downloadJustTableSection() {
@@ -940,7 +1055,7 @@
         const oldOverflow = scrollContainer.style.overflowX;
         scrollContainer.style.overflowX = 'visible'; 
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `جدول_أداء_الموظفين_فقط.png`;
             link.href = canvas.toDataURL("image/png");
@@ -952,7 +1067,7 @@
     async function downloadJustChartSection() {
         const area = document.getElementById('justChartCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `رسم_بياني_الموظفين_فقط.png`;
             link.href = canvas.toDataURL("image/png");
@@ -963,7 +1078,7 @@
     async function downloadSupervisorsSection() {
         const area = document.getElementById('supervisorsCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `تحليل_وقسم_المشرفين_الكامل.png`;
             link.href = canvas.toDataURL("image/png");
