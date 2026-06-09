@@ -103,7 +103,7 @@
         <div id="results-section" style="display:none;">
             <div class="text-center mb-3">
                 <div class="transfer-box shadow-sm">
-                    <label class="fw-bold mb-1 d-block">اختر تاريخ التترحيل لجوجل شيت والتقرير:</label>
+                    <label class="fw-bold mb-1 d-block">اختر تاريخ الترحيل لجوجل شيت والتقرير:</label>
                     <input type="date" id="transferDate" class="form-control mb-2 text-center" style="width:200px; margin: 0 auto;">
                     <button class="btn btn-success fw-bold px-4" id="transferBtn" style="background:var(--accent); border:none;" onclick="transferToMonthly()">
                         🚀 ترحيل للتقرير وجوجل شيت
@@ -119,8 +119,8 @@
                 <table class="pro-table" id="summaryTable">
                     <thead>
                         <tr>
-                            <th>التحويلة</th>
                             <th>الاسم</th>
+                            <th>التحويلة</th>
                             <th>عدد الدقائق</th> <th>عدد المكالمات</th> <th>تارجت الدقائق</th>
                             <th>المتبقي</th>
                         </tr>
@@ -149,7 +149,7 @@
                     <table class="monthly-table" id="monthlyReportTable">
                         <thead>
                             <tr id="monthlyHeader">
-                                <th>التحويلة</th><th>الاسم</th><th id="daysPlaceholder"></th><th class="avg-col">المتوسط</th>
+                                <th>الاسم</th><th>التحويلة</th><th id="daysPlaceholder"></th><th class="avg-col">المتوسط</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -161,7 +161,7 @@
 </div>
 
 <script>
-    // ضع رابط الـ Web App الخاص بك هنا بعد التحديث
+    // رابط الـ Web App الخاص بك
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdvxzEJgxii0AV9jhWF3ZQdde5bODUh3oPWJNrbPX5baoz9k9D7JLZd5hUgPNEjny2JQ/exec";
 
     document.getElementById('transferDate').valueAsDate = new Date();
@@ -184,14 +184,13 @@
     let monthlyData = {};
     let currentProcessedMins = {};
 
-    // جلب الموظفين مباشرة من شيت "إدارة الفريق" عند فتح الموقع
+    // جلب الموظفين من الشيت من صفحة "بيانات الموظفين"
     async function loadEmployees() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getEmployees`);
             employees = await response.json();
         } catch (error) {
             console.error("خطأ في جلب بيانات الموظفين:", error);
-            // قائمة احتياطية في حال تعطل الاتصال
             employees = [
                 {ext: "1116", name: "آية أحمد", target: 180}, {ext: "1089", name: "حنين سمير", target: 180},
                 {ext: "1154", name: "عبدالرحمن علي", target: 180}, {ext: "1600", name: "محمد سيد", target: 180},
@@ -212,7 +211,7 @@
         lines.forEach(line => {
             const cols = line.split(/\t|\s{2,}/); if (line.includes("Extension") || cols.length < 3) return;
             const ext = cols[0].match(/\d+/)[0];
-            const times = cols.filter(c => c.includes(':') && c.split(':').length === 3);
+            const times = cols.filter(c => c.includes(':' ) && c.split(':').length === 3);
             const mins = Math.round((timeToSeconds(times[0] || "0:00:00") + timeToSeconds(times[1] || "0:00:00")) / 60);
             if(!callData[ext]) callData[ext] = { mins: 0, calls: 0 };
             callData[ext].mins += mins; callData[ext].calls += (parseInt(cols[1]) + parseInt(cols[2]));
@@ -229,9 +228,10 @@
             const emp = employees.find(e => e.ext === ext) || {name:"غير مسجل", target:180};
             const cls = info.mins >= avg ? 'above-avg' : 'below-avg';
             
+            // الاسم أولاً ثم التحويلة لتطابق الثيم الجديد والترويسة
             tbody.innerHTML += `<tr>
-                <td>${ext}</td>
                 <td>${emp.name}</td>
+                <td>${ext}</td>
                 <td class="${cls}">${info.mins}</td>
                 <td style="color:var(--primary)">${info.calls}</td>
                 <td>${emp.target}</td>
@@ -241,7 +241,6 @@
         document.getElementById('results-section').style.display = 'block';
     }
 
-    // ترحيل البيانات المزدوج: إلى صفحة التقرير الشهري في الموقع + شيت جوجل في نفس اللحظة
     async function transferToMonthly() {
         const selectedDate = new Date(document.getElementById('transferDate').value);
         if (isNaN(selectedDate.getTime())) return alert("يرجى اختيار تاريخ صحيح");
@@ -255,14 +254,12 @@
         btn.disabled = true;
         btn.innerHTML = `جاري الترحيل الفوري... <span class="loading-spinner"></span>`;
 
-        // 1. التحديث المحلي الفوري لصفحة الأداء الشهري في واجهة الموقع
         if(!monthlyData[mKey]) monthlyData[mKey] = {};
         for(let ex in currentProcessedMins) { 
             if(!monthlyData[mKey][ex]) monthlyData[mKey][ex] = {}; 
             monthlyData[mKey][ex][day] = currentProcessedMins[ex]; 
         }
 
-        // 2. إرسال طلب الترحيل المباشر لجوجل شيت
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -275,7 +272,7 @@
                     data: currentProcessedMins
                 })
             });
-            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" (يوم ${day}) في جوجل شيت والتقرير الشهري بنجاح! 🚀✅`);
+            showStatus(`تم ترحيل البيانات لصفحة "${monthName}" (يوم ${day}) بنجاح! 🚀✅`);
         } catch (error) {
             console.error(error);
             alert("حدث خطأ أثناء ترحيل البيانات لجوجل شيت.");
@@ -285,7 +282,6 @@
         }
     }
 
-    // جلب البيانات الشهرية من جوجل شيت وعرضها
     async function fetchMonthlyReport() {
         const now = new Date();
         const arMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -298,7 +294,7 @@
             const response = await fetch(`${SCRIPT_URL}?action=getMonthly&monthSheet=${encodeURIComponent(monthName)}`);
             monthlyData[mKey] = await response.json();
         } catch (error) {
-            console.error("تعذر جلب البيانات، سيتم العرض من الذاكرة المحلية:", error);
+            console.error("تعذر جلب البيانات:", error);
         }
 
         renderMonthlyReport(mKey, monthName);
@@ -319,7 +315,8 @@
         
         const tbody = document.querySelector('#monthlyReportTable tbody'); tbody.innerHTML = '';
         employees.forEach(emp => {
-            let row = `<tr><td>${emp.ext}</td><td>${emp.name}</td>`, total = 0, count = 0;
+            // الاسم أولاً ثم التحويلة لتطابق الهيكل الجديد للجدول الشهري
+            let row = `<tr><td>${emp.name}</td><td>${emp.ext}</td>`, total = 0, count = 0;
             for(let i=1; i<=maxDay; i++) { 
                 const v = data[emp.ext]?.[i] !== undefined && data[emp.ext]?.[i] !== null ? data[emp.ext][i] : '-'; 
                 row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
@@ -330,7 +327,6 @@
         });
     }
 
-    // عند تعديل خلية يدوياً في الموقع يتم تحديث شيت جوجل فوراً
     async function updateMonthlyDay(mKey, monthName, ext, day, cell) {
         let val = cell.innerText.trim();
         if (!monthlyData[mKey]) monthlyData[mKey] = {};
