@@ -50,8 +50,8 @@
 
         .above-avg { color: var(--secondary) !important; font-weight: 900; }
         .below-avg { color: var(--danger) !important; font-weight: 900; }
+        .req-col { color: #b45309 !important; background: rgba(245, 158, 11, 0.05); font-weight: 900; }
 
-        /* حاوية الشارت الاحترافية الفخمة بالبوردر والظلال المتطورة */
         .chart-box-card {
             background: var(--card-bg);
             border: 2px solid var(--border);
@@ -132,6 +132,7 @@
                             <th onclick="sortTable(3, 'summaryTable', true)">عدد المكالمات ⇅</th>
                             <th onclick="sortTable(4, 'summaryTable', true)">تارجت الدقائق ⇅</th>
                             <th onclick="sortTable(5, 'summaryTable')">المتبقي ⇅</th>
+                            <th onclick="sortTable(6, 'summaryTable', true)" style="background: #d97706">الدقائق المطلوبة للمتوسط ⇅</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -153,7 +154,7 @@
                 <div>
                     <button class="btn btn-sm btn-warning me-2 fw-bold text-white" onclick="downloadEmployeesSection()">📸 صورة أداء الموظفين</button>
                     <button class="btn btn-sm btn-info me-2 fw-bold text-white" onclick="downloadSupervisorsSection()">📸 صورة أداء المشرفين</button>
-                    <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 ملف إكسيل</button>
+                    <button class="btn btn-sm btn-success me-2 fw-bold" onclick="downloadMonthlyExcel()">📥 تحميل ملف إكسيل</button>
                 </div>
             </div>
 
@@ -169,6 +170,7 @@
                                 <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
                                 <th id="daysPlaceholder"></th>
                                 <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
+                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">الدقائق المطلوبة للمتوسط ⇅</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -300,10 +302,12 @@
 
         exts.forEach(ext => {
             const info = callData[ext];
-            // تحسين معالجة ومطابقة النصوص البرمجية لمنع مشكلة "غير مسجل" نهائياً
             const emp = employees.find(e => String(e.ext).trim() === String(ext).trim()) || {name:"غير مسجل", target:180};
             
             const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
+            
+            // حساب الدقائق المطلوبة للوصول لمتوسط الـ 180 في اليوم الحالي
+            const reqMinsValue = (180 - info.mins) > 0 ? `+${180 - info.mins}` : "⭐ مكتمل";
 
             chartLabels.push(emp.name);
             chartData.push(info.mins);
@@ -315,6 +319,7 @@
                 <td style="color:var(--accent)">${info.calls}</td>
                 <td>${emp.target}</td>
                 <td>${emp.target - info.mins > 0 ? emp.target - info.mins : '✅'}</td>
+                <td class="req-col">${reqMinsValue}</td>
             </tr>`;
         });
         
@@ -421,11 +426,11 @@
         const maxDay = 31; 
 
         const header = document.getElementById('monthlyHeader');
-        while(header.children.length > 3) header.removeChild(header.children[2]);
+        while(header.children.length > 4) header.removeChild(header.children[2]);
         
         for(let i=1; i<=maxDay; i++) { 
             const th = document.createElement('th'); th.innerText = i; th.className = 'day-header';
-            header.insertBefore(th, header.lastElementChild); 
+            header.insertBefore(th, header.children[header.children.length - 2]); 
         }
         
         const tbody = document.querySelector('#monthlyReportTable tbody'); tbody.innerHTML = '';
@@ -465,7 +470,12 @@
                 }
                 
                 const cls = employeeAverage >= 180 ? 'above-avg' : 'below-avg';
-                row += `<td class="avg-col ${cls}">${employeeAverage}</td></tr>`;
+                
+                // حساب الدقائق المطلوبة للوصول لمتوسط 180 في السجل الشهري العام
+                const reqMinsValue = (180 - employeeAverage) > 0 ? `+${180 - employeeAverage}` : "⭐ مكتمل";
+
+                row += `<td class="avg-col ${cls}">${employeeAverage}</td>`;
+                row += `<td class="req-col">${reqMinsValue}</td></tr>`;
                 tbody.innerHTML += row;
 
                 chartLabels.push(emp.name);
@@ -535,7 +545,8 @@
 
             tbody.innerHTML += `<tr>
                 <td style="color:var(--accent); font-weight:900;">${supervisorName}</td>
-                <td>${data.employeeCount}</td> <td>${data.totalCalls}</td>
+                <td>${data.employeeCount}</td> 
+                <td>${data.totalCalls}</td>
                 <td class="${finalSupervisorAvg >= 180 ? 'above-avg' : 'below-avg'}">${finalSupervisorAvg} دقيقة</td>
             </tr>`;
         }
@@ -619,8 +630,8 @@
         rows.sort((a, b) => {
             let valA = a.children[colIndex].innerText.trim();
             let valB = b.children[colIndex].innerText.trim();
-            if(valA === '✅') valA = '0';
-            if(valB === '✅') valB = '0';
+            if(valA === '✅' || valA === '⭐ مكتمل') valA = '0';
+            if(valB === '✅' || valB === '⭐ مكتمل') valB = '0';
 
             if (isNumeric) { return (parseFloat(valA) - parseFloat(valB)) * dir; }
             return valA.localeCompare(valB, 'ar', {numeric: true}) * dir;
@@ -628,7 +639,7 @@
         rows.forEach(row => tbody.appendChild(row));
     }
 
-    function sortMonthlyTable(colIndex) {
+    function sortMonthlyTable(colIndex, isSpecialCol = false) {
         const table = document.getElementById('monthlyReportTable');
         const tbody = table.querySelector('tbody');
         const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -637,8 +648,21 @@
         const dir = sortDirections[colIndex] ? 1 : -1;
 
         rows.sort((a, b) => {
-            let cellA = (colIndex === 33) ? a.querySelector('.avg-col').innerText : a.children[colIndex].innerText;
-            let cellB = (colIndex === 33) ? b.querySelector('.avg-col').innerText : b.children[colIndex].innerText;
+            let cellA, cellB;
+            
+            if(isSpecialCol) {
+                // إذا كان العمود هو المتوسط (33) أو المطلوب للمتوسط (34)
+                const lastCellsA = a.querySelectorAll('td');
+                const lastCellsB = b.querySelectorAll('td');
+                cellA = colIndex === 33 ? lastCellsA[lastCellsA.length - 2].innerText : lastCellsA[lastCellsA.length - 1].innerText;
+                cellB = colIndex === 33 ? lastCellsB[lastCellsB.length - 2].innerText : lastCellsB[lastCellsB.length - 1].innerText;
+            } else {
+                cellA = a.children[colIndex].innerText;
+                cellB = b.children[colIndex].innerText;
+            }
+            
+            if(cellA === '⭐ مكتمل') cellA = '0';
+            if(cellB === '⭐ مكتمل') cellB = '0';
             
             if(colIndex === 0 || colIndex === 1) {
                 return cellA.localeCompare(cellB, 'ar', {numeric: true}) * dir;
@@ -666,7 +690,6 @@
         } catch (err) { alert("حدث خطأ في استخراج الصورة"); }
     }
 
-    // تصوير قسم أداء الموظفين منفرداً بجودة عالية وبدون إشراك المشرفين
     async function downloadEmployeesSection() {
         const scrollContainer = document.querySelector('.monthly-scroll');
         const area = document.getElementById('employeesCaptureArea');
@@ -682,7 +705,6 @@
         finally { scrollContainer.style.overflowX = oldOverflow; }
     }
 
-    // تصوير قسم أداء المشرفين منفرداً بشكل نظيف واحترافي
     async function downloadSupervisorsSection() {
         const area = document.getElementById('supervisorsCaptureArea');
         try {
