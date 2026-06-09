@@ -131,8 +131,8 @@
                             <th onclick="sortTable(2, 'summaryTable', true)">عدد الدقائق ⇅</th>
                             <th onclick="sortTable(3, 'summaryTable', true)">عدد المكالمات ⇅</th>
                             <th onclick="sortTable(4, 'summaryTable', true)">تارجت الدقائق ⇅</th>
-                            <th onclick="sortTable(5, 'summaryTable')">المتبقي ⇅</th>
-                            <th onclick="sortTable(6, 'summaryTable', true)" style="background: #d97706">الدقائق المطلوبة للمتوسط ⇅</th>
+                            <th onclick="sortTable(5, 'summaryTable')">المتبقي لتارجت اليوم ⇅</th>
+                            <th onclick="sortTable(6, 'summaryTable', true)" style="background: #d97706">الدقائق الزيادة المطلوبة لتارجت الشهر ⇅</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -170,7 +170,7 @@
                                 <th onclick="sortMonthlyTable(1)">التحويلة ⇅</th>
                                 <th id="daysPlaceholder"></th>
                                 <th class="avg-col" onclick="sortMonthlyTable(33, true)">المتوسط ⇅</th>
-                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">الدقائق المطلوبة للمتوسط ⇅</th>
+                                <th style="background: #d97706; color: #fff !important;" onclick="sortMonthlyTable(34, true)">الدقائق الزيادة المطلوبة لتارجت الشهر ⇅</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -237,8 +237,24 @@
         const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.body.setAttribute('data-theme', theme);
         localStorage.setItem('hr_theme', theme);
+        
+        // إعادة بناء وتحديث ألوان التشارات فوراً عند ضغط زر دارك مود لتحديث ألوان الخطوط
+        if(document.getElementById('results-section').style.display === 'block') {
+            processData(); 
+        }
+        if(window.lastMonthKey) {
+            renderMonthlyReport(window.lastMonthKey, window.lastMonthName);
+        }
     }
     if(localStorage.getItem('hr_theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+
+    // دالة ديناميكية لجلب ألوان الخطوط المناسبة حسب المظهر الفعلي المختار لمنع مشكلة خطوط الدارك مود
+    function getChartTextColor() {
+        return document.body.getAttribute('data-theme') === 'dark' ? '#f9fafb' : '#475569';
+    }
+    function getGridColor() {
+        return document.body.getAttribute('data-theme') === 'dark' ? '#374151' : '#e2e8f0';
+    }
 
     async function loadEmployees() {
         try {
@@ -302,12 +318,15 @@
 
         exts.forEach(ext => {
             const info = callData[ext];
+            // الموظف والتارجت يقرأ ديناميكياً من شيت جوجل من مصفوفة الـ Employees القادمة من السيرفر
             const emp = employees.find(e => String(e.ext).trim() === String(ext).trim()) || {name:"غير مسجل", target:180};
             
             const cls = info.mins >= calculatedAvg ? 'above-avg' : 'below-avg';
             
-            // حساب الدقائق المطلوبة للوصول لمتوسط الـ 180 في اليوم الحالي
-            const reqMinsValue = (180 - info.mins) > 0 ? `+${180 - info.mins}` : "⭐ مكتمل";
+            // التارجت الفردي المستخدم للحسابات يقرأ من شيت جوجل
+            const individualTarget = emp.target || 180;
+            const remainingForToday = (individualTarget - info.mins) > 0 ? (individualTarget - info.mins) : '✅';
+            const reqMinsValue = (individualTarget - info.mins) > 0 ? `+${individualTarget - info.mins}` : "⭐ مكتمل";
 
             chartLabels.push(emp.name);
             chartData.push(info.mins);
@@ -317,8 +336,8 @@
                 <td>${ext}</td>
                 <td class="${cls}">${info.mins}</td>
                 <td style="color:var(--accent)">${info.calls}</td>
-                <td>${emp.target}</td>
-                <td>${emp.target - info.mins > 0 ? emp.target - info.mins : '✅'}</td>
+                <td>${individualTarget}</td>
+                <td>${remainingForToday}</td>
                 <td class="req-col">${reqMinsValue}</td>
             </tr>`;
         });
@@ -331,6 +350,9 @@
         const ctx = document.getElementById('dailyChart').getContext('2d');
         if(dailyChartInstance) dailyChartInstance.destroy();
         
+        const currentTextColor = getChartTextColor();
+        const currentGridColor = getGridColor();
+
         dailyChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -355,17 +377,21 @@
                 responsive: true, 
                 maintainAspectRatio: false,
                 plugins: {
+                    legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
                         anchor: 'end',
                         align: 'top',
                         font: { weight: 'bold', family: 'Cairo', size: 12 },
-                        color: '#475569',
+                        color: currentTextColor, // لون الداتا ليبلز يتغير حسب المظهر
                         formatter: function(value, context) {
                             return context.datasetIndex === 0 ? value : null;
                         }
                     }
                 },
-                scales: { y: { beginAtZero: true } } 
+                scales: { 
+                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: currentGridColor } },
+                    y: { beginAtZero: true, ticks: { color: currentTextColor }, grid: { color: currentGridColor } } 
+                } 
             }
         });
     }
@@ -421,6 +447,7 @@
     }
 
     function renderMonthlyReport(mKey, monthName) {
+        window.lastMonthKey = mKey; window.lastMonthName = monthName; // حفظ مرجعي لتحديث المظهر
         document.getElementById('monthlyTitle').innerText = `سجل الأداء لشهر: ${monthName || mKey}`;
         const data = monthlyData[mKey] || {};
         const maxDay = 31; 
@@ -469,10 +496,10 @@
                     row += `<td contenteditable="true" onblur="updateMonthlyDay('${mKey}', '${monthName}', '${emp.ext}', ${i}, this)" onkeydown="checkEnter(event, this)">${v}</td>`; 
                 }
                 
-                const cls = employeeAverage >= 180 ? 'above-avg' : 'below-avg';
-                
-                // حساب الدقائق المطلوبة للوصول لمتوسط 180 في السجل الشهري العام
-                const reqMinsValue = (180 - employeeAverage) > 0 ? `+${180 - employeeAverage}` : "⭐ مكتمل";
+                // التلوين والمطابقة تعتمد على تارجت الموظف الشخصي القادم من الشيت
+                const individualTarget = emp.target || 180;
+                const cls = employeeAverage >= individualTarget ? 'above-avg' : 'below-avg';
+                const reqMinsValue = (individualTarget - employeeAverage) > 0 ? `+${individualTarget - employeeAverage}` : "⭐ مكتمل";
 
                 row += `<td class="avg-col ${cls}">${employeeAverage}</td>`;
                 row += `<td class="req-col">${reqMinsValue}</td></tr>`;
@@ -490,6 +517,9 @@
     function buildMonthlyChart(labels, averages) {
         const ctx = document.getElementById('monthlyChart').getContext('2d');
         if(monthlyChartInstance) monthlyChartInstance.destroy();
+
+        const currentTextColor = getChartTextColor();
+        const currentGridColor = getGridColor();
 
         monthlyChartInstance = new Chart(ctx, {
             type: 'bar',
@@ -515,15 +545,20 @@
                 responsive: true, 
                 maintainAspectRatio: false,
                 plugins: {
+                    legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: { 
                         anchor: 'end', 
                         align: 'top', 
                         font: { weight: 'bold', family: 'Cairo' }, 
-                        color: '#475569',
+                        color: currentTextColor,
                         formatter: function(value, context) {
                             return context.datasetIndex === 0 ? value : null;
                         }
                     }
+                },
+                scales: {
+                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: currentGridColor } },
+                    y: { ticks: { color: currentTextColor }, grid: { color: currentGridColor } }
                 }
             }
         });
@@ -558,6 +593,9 @@
         const ctx = document.getElementById('supervisorChart').getContext('2d');
         if(supervisorChartInstance) supervisorChartInstance.destroy();
 
+        const currentTextColor = getChartTextColor();
+        const currentGridColor = getGridColor();
+
         supervisorChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -582,15 +620,20 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
+                    legend: { labels: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } } },
                     datalabels: {
                         anchor: 'end', 
                         align: 'top', 
                         font: { weight: 'bold', family: 'Cairo' }, 
-                        color: '#475569',
+                        color: currentTextColor,
                         formatter: function(value, context) {
                             return context.datasetIndex === 0 ? value : null;
                         }
                     }
+                },
+                scales: {
+                    x: { ticks: { color: currentTextColor, font: { family: 'Cairo', weight: 'bold' } }, grid: { color: currentGridColor } },
+                    y: { ticks: { color: currentTextColor }, grid: { color: currentGridColor } }
                 }
             }
         });
@@ -651,7 +694,6 @@
             let cellA, cellB;
             
             if(isSpecialCol) {
-                // إذا كان العمود هو المتوسط (33) أو المطلوب للمتوسط (34)
                 const lastCellsA = a.querySelectorAll('td');
                 const lastCellsB = b.querySelectorAll('td');
                 cellA = colIndex === 33 ? lastCellsA[lastCellsA.length - 2].innerText : lastCellsA[lastCellsA.length - 1].innerText;
@@ -682,7 +724,7 @@
     async function downloadTableAsImage() {
         const area = document.getElementById('tableCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `تقرير_الأداء_اليومي_${new Date().getDate()}_${new Date().getMonth()+1}.png`;
             link.href = canvas.toDataURL("image/png");
@@ -696,7 +738,7 @@
         const oldOverflow = scrollContainer.style.overflowX;
         scrollContainer.style.overflowX = 'visible'; 
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `أداء_الموظفين_الشهري.png`;
             link.href = canvas.toDataURL("image/png");
@@ -708,7 +750,7 @@
     async function downloadSupervisorsSection() {
         const area = document.getElementById('supervisorsCaptureArea');
         try {
-            const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(area, { scale: 2, backgroundColor: null });
             const link = document.createElement('a');
             link.download = `تحليل_أداء_المشرفين_الشهري.png`;
             link.href = canvas.toDataURL("image/png");
